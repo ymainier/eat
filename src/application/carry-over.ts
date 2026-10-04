@@ -1,7 +1,7 @@
 import { and, eq, inArray } from "drizzle-orm";
 import type { Database, Executor, Transaction } from "../db/client";
 import { mealWeeks, meals } from "../db/schema";
-import { addDays, type MealWeekPeriod } from "../domain/meal-week";
+import type { MealWeekPeriod } from "../domain/meal-week";
 import type { Clock } from "./clock";
 import {
   findMealWeek,
@@ -10,6 +10,7 @@ import {
   targetMealWeek,
   type MealView,
 } from "./meal-weeks";
+import { holdHouseholdSettings } from "./households";
 import { isUuid } from "./meals";
 import type { Member } from "./members";
 
@@ -20,9 +21,9 @@ type Deps = { db: Database; clock: Clock };
 /** The current Meal Week and the Meal Week immediately before it, if it exists. */
 async function currentAndPrevious(deps: { db: Executor; clock: Clock }, member: Member) {
   const current = await targetMealWeek(deps, member);
-  const previousStart = addDays(current.period.startDate, -7);
-  const previous = await findMealWeek(deps.db, member.householdId, previousStart);
-  return { current, previous, previousStart };
+  const previousTarget = await targetMealWeek(deps, member, current.previousStartDate);
+  const previous = await findMealWeek(deps.db, member.householdId, current.previousStartDate);
+  return { current, previous, previousTarget, previousStart: current.previousStartDate };
 }
 
 /**
@@ -33,13 +34,9 @@ export async function getCarryOverCandidates(
   deps: Deps,
   input: { member: Member },
 ): Promise<CarryOverCandidates | null> {
-  const { current, previous, previousStart } = await currentAndPrevious(deps, input.member);
+  const { previous, previousTarget } = await currentAndPrevious(deps, input.member);
   if (!previous || previous.carryOverHandledAt) return null;
-  const mealWeek = await readMealWeek(deps.db, input.member.householdId, {
-    ...current,
-    period: { startDate: previousStart, endDate: addDays(previousStart, 6) },
-    relation: "past",
-  });
+  const mealWeek = await readMealWeek(deps.db, input.member.householdId, previousTarget);
   const uneaten = mealWeek.meals.filter((meal) => !meal.eaten);
   if (uneaten.length === 0) return null;
   return { startDate: mealWeek.startDate, endDate: mealWeek.endDate, meals: uneaten };
@@ -56,6 +53,7 @@ async function pendingCarryOver(
   member: Member,
   fromStartDate: string,
 ) {
+  await holdHouseholdSettings(tx, member.householdId);
   const { current, previous, previousStart } = await currentAndPrevious(
     { db: tx, clock },
     member,

@@ -1,8 +1,9 @@
 import { and, count, desc, eq, gt, lt, sql } from "drizzle-orm";
 import type { Database } from "../db/client";
 import { mealWeeks, meals } from "../db/schema";
-import { mealWeekStartingOn, type MealWeekPeriod } from "../domain/meal-week";
+import { mealWeekOn, type MealWeekPeriod } from "../domain/meal-week";
 import type { Clock } from "./clock";
+import { loadHousehold } from "./households";
 import { targetMealWeek } from "./meal-weeks";
 import type { Member } from "./members";
 
@@ -21,6 +22,7 @@ export async function listPastMealWeeks(
   input: { member: Member },
 ): Promise<MealWeekSummary[]> {
   const current = await targetMealWeek(deps, input.member);
+  const { schedule } = await loadHousehold(deps.db, input.member.householdId);
   const rows = await deps.db
     .select({
       startDate: mealWeeks.startDate,
@@ -40,7 +42,7 @@ export async function listPastMealWeeks(
     .having(gt(count(meals.id), 0))
     .orderBy(desc(mealWeeks.startDate));
   return rows.map(({ startDate, ...counts }) => ({
-    ...mealWeekStartingOn(startDate),
+    ...mealWeekOn(startDate, schedule),
     ...counts,
   }));
 }

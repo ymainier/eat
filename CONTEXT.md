@@ -17,7 +17,7 @@ _Avoid_: User, account
 ### Planning
 
 **Meal Week**:
-The planning period of seven days starting on the Household's chosen start day in the Household's timezone (by default Saturday, the grocery delivery day), holding an unordered pool of Meals.
+The planning period of seven days starting on the Household's chosen start day in the Household's timezone (by default Saturday, the grocery delivery day), holding an unordered pool of Meals. When the start day changes, the last Meal Week before the change runs longer (up to 13 days) so Meal Weeks never overlap or leave gaps.
 _Avoid_: Week, calendar week, plan
 
 **Meal Count**:

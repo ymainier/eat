@@ -1,6 +1,5 @@
 import Link from "next/link";
 import type { CarryOverCandidates, DishView, MealWeekView } from "@/application";
-import { addDays } from "@/domain/meal-week";
 import { formatDay } from "@/web/format";
 import { CarryOverPrompt } from "./carry-over-prompt";
 import { removeMeal, setMealEaten } from "./meal-week-actions";
@@ -34,6 +33,9 @@ export function MealWeekPage({
         <Link href="/history" className="text-zinc-600 underline">
           History
         </Link>
+        <Link href="/settings" className="text-zinc-600 underline">
+          Settings
+        </Link>
         <form action={signOut}>
           <button type="submit" className="text-sm text-zinc-600 underline">
             Sign out
@@ -42,7 +44,7 @@ export function MealWeekPage({
       </nav>
 
       <nav aria-label="Meal Weeks" className="mb-2 flex items-center justify-between text-sm">
-        <Link href={mealWeekHref(addDays(mealWeek.startDate, -7))} className="underline">
+        <Link href={mealWeekHref(mealWeek.previousStartDate)} className="underline">
           ← Previous
         </Link>
         {mealWeek.relation !== "current" && (
@@ -50,7 +52,7 @@ export function MealWeekPage({
             Current Meal Week
           </Link>
         )}
-        <Link href={mealWeekHref(addDays(mealWeek.startDate, 7))} className="underline">
+        <Link href={mealWeekHref(mealWeek.nextStartDate)} className="underline">
           Next →
         </Link>
       </nav>

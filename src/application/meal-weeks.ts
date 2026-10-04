@@ -2,15 +2,16 @@ import { and, asc, eq } from "drizzle-orm";
 import type { Executor } from "../db/client";
 import { dishes, mealWeeks, meals } from "../db/schema";
 import {
+  addDays,
   isCalendarDate,
-  mealWeekContaining,
-  mealWeekStartingOn,
-  weekday,
+  isMealWeekStart,
+  mealWeekOn,
+  type CalendarDate,
   type MealWeekPeriod,
 } from "../domain/meal-week";
 import type { Clock } from "./clock";
 import { hasRecipe, type DishView } from "./dishes";
-import { loadHouseholdSettings } from "./households";
+import { loadHousehold, today } from "./households";
 import type { Member } from "./members";
 import { tagsOfDishes } from "./tags";
 
@@ -28,7 +29,11 @@ export type MealView = {
 
 export type MealWeekRelation = "past" | "current" | "future";
 
-export type MealWeekView = MealWeekPeriod & {
+/** Where to go from a Meal Week: the Meal Weeks just before and after it. */
+type Neighbours = { previousStartDate: CalendarDate; nextStartDate: CalendarDate };
+
+export type MealWeekView = MealWeekPeriod &
+  Neighbours & {
   relation: MealWeekRelation;
   mealCount: number;
   plannedMealCount: number;
@@ -36,7 +41,7 @@ export type MealWeekView = MealWeekPeriod & {
   meals: MealView[];
 };
 
-export type MealWeekTarget = {
+export type MealWeekTarget = Neighbours & {
   period: MealWeekPeriod;
   relation: MealWeekRelation;
   /** The Meal Count the Meal Week gets if it is created now. */
@@ -44,34 +49,29 @@ export type MealWeekTarget = {
 };
 
 /**
- * The Meal Week starting on `startDate`, or the current one. A start date is
- * valid if a Meal Week already starts there or it falls on the Household's
- * start day.
+ * The Meal Week starting on `startDate`, or the current one, following the
+ * Household's start-day schedule.
  */
 export async function targetMealWeek(
   deps: { db: Executor; clock: Clock },
   member: Member,
   startDate?: string,
 ): Promise<MealWeekTarget> {
-  const settings = await loadHouseholdSettings(deps.db, member.householdId);
-  const current = mealWeekContaining(
-    deps.clock.now(),
-    settings.startDay,
-    settings.timezone,
-  );
+  const household = await loadHousehold(deps.db, member.householdId);
+  const { schedule } = household;
+  const current = mealWeekOn(today(household, deps.clock), schedule);
   const target = startDate ?? current.startDate;
-  if (!isCalendarDate(target)) throw new MealWeekNotFoundError(target);
-  if (
-    weekday(target) !== settings.startDay &&
-    !(await findMealWeek(deps.db, member.householdId, target))
-  ) {
+  if (!isCalendarDate(target) || !isMealWeekStart(target, schedule)) {
     throw new MealWeekNotFoundError(target);
   }
+  const period = mealWeekOn(target, schedule);
   return {
-    period: mealWeekStartingOn(target),
+    period,
+    previousStartDate: mealWeekOn(addDays(target, -1), schedule).startDate,
+    nextStartDate: addDays(period.endDate, 1),
     relation:
       target < current.startDate ? "past" : target > current.startDate ? "future" : "current",
-    mealCount: settings.mealCount,
+    mealCount: household.mealCount,
   };
 }
 
@@ -113,6 +113,8 @@ export async function readMealWeek(
   }));
   return {
     ...target.period,
+    previousStartDate: target.previousStartDate,
+    nextStartDate: target.nextStartDate,
     relation: target.relation,
     mealCount: mealWeek?.mealCount ?? target.mealCount,
     plannedMealCount: pool.length,

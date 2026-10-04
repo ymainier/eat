@@ -20,15 +20,30 @@ export const households = pgTable(
   {
     id: uuid("id").primaryKey().defaultRandom(),
     name: text("name").notNull(),
-    // 0 = Sunday … 6 = Saturday
-    startDay: integer("start_day").notNull(),
+    // The start day lives in start_day_changes.
     mealCount: integer("meal_count").notNull(),
     // IANA timezone, e.g. "Europe/London"
     timezone: text("timezone").notNull(),
   },
+  (t) => [check("households_meal_count_check", sql`${t.mealCount} >= 0`)],
+);
+
+// The Household's Meal Week start day over time: from `from` on, Meal Weeks
+// start on `start_day`. The earliest row also covers every earlier date.
+export const startDayChanges = pgTable(
+  "start_day_changes",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    householdId: uuid("household_id")
+      .notNull()
+      .references(() => households.id, { onDelete: "cascade" }),
+    from: date("from").notNull(),
+    // 0 = Sunday … 6 = Saturday
+    startDay: integer("start_day").notNull(),
+  },
   (t) => [
-    check("households_start_day_check", sql`${t.startDay} between 0 and 6`),
-    check("households_meal_count_check", sql`${t.mealCount} >= 0`),
+    uniqueIndex("start_day_changes_household_from_unique").on(t.householdId, t.from),
+    check("start_day_changes_start_day_check", sql`${t.startDay} between 0 and 6`),
   ],
 );
 

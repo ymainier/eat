@@ -3,6 +3,7 @@ import { meals } from "../db/schema";
 import { dishName } from "../domain/dish";
 import type { Clock } from "./clock";
 import { findOrCreateDish } from "./dishes";
+import { holdHouseholdSettings } from "./households";
 import { findOrCreateMealWeek, targetMealWeek } from "./meal-weeks";
 import { MealNotFoundError, ownMeal } from "./meals";
 import type { Member } from "./members";
@@ -22,6 +23,7 @@ export async function planMeal(
   const name = dishName(input.dishName);
   const { householdId } = input.member;
   return deps.db.transaction(async (tx) => {
+    await holdHouseholdSettings(tx, householdId);
     const target = await targetMealWeek(
       { db: tx, clock: deps.clock },
       input.member,

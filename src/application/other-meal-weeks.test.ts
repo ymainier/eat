@@ -23,6 +23,8 @@ describe("get a Meal Week by its start date", () => {
     expect(await app.getMealWeek({ member, startDate: next })).toEqual({
       startDate: next,
       endDate: "2026-10-16",
+      previousStartDate: current,
+      nextStartDate: "2026-10-17",
       relation: "future",
       mealCount: 14,
       plannedMealCount: 0,

@@ -1,4 +1,5 @@
 import type { Database } from "../db/client";
+import type { HouseholdSettings } from "../domain/household";
 import type { Clock } from "./clock";
 import type { EmailSender } from "./email";
 import { carryOver, dismissCarryOver, getCarryOverCandidates } from "./carry-over";
@@ -13,6 +14,7 @@ import { getCurrentMealWeek, getMealWeek } from "./get-meal-week";
 import { listPastMealWeeks } from "./history";
 import { planMeal, removeMeal } from "./plan-meals";
 import { markMealEaten, markMealNotEaten } from "./meals";
+import { getHouseholdSettings, updateHouseholdSettings } from "./households";
 import { findMember, type Member } from "./members";
 import { getDish, removeRecipe, setRecipe } from "./recipes";
 import {
@@ -37,6 +39,9 @@ export type { CatalogueDish, DishView } from "./dishes";
 export { DishNameTakenError, DishNotFoundError } from "./dishes";
 export type { MealWeekSummary } from "./history";
 export type { TagView } from "./tags";
+export type { HouseholdSettingsView } from "./households";
+export type { HouseholdSettings, Weekday } from "../domain/household";
+export { InvalidSettingError } from "../domain/household";
 export type { DishDetail } from "./recipes";
 export type { Recipe } from "../domain/recipe";
 export { EmptyRecipeError, InvalidSourceUrlError } from "../domain/recipe";
@@ -102,6 +107,10 @@ export function createApplication(deps: ApplicationDeps) {
     archiveDish: (input: { member: Member; dishId: string }) => archiveDish(deps, input),
     unarchiveDish: (input: { member: Member; dishId: string }) =>
       unarchiveDish(deps, input),
+
+    getHouseholdSettings: (input: { member: Member }) => getHouseholdSettings(deps, input),
+    updateHouseholdSettings: (input: { member: Member; settings: HouseholdSettings }) =>
+      updateHouseholdSettings(deps, input),
 
     getDish: (input: { member: Member; dishId: string }) => getDish(deps, input),
     setRecipe: (input: {
