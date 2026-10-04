@@ -4,6 +4,7 @@ import type { EmailSender } from "./email";
 import { listDishes } from "./dishes";
 import { getCurrentMealWeek } from "./get-current-meal-week";
 import { planMeal, removeMeal } from "./plan-meals";
+import { markMealEaten, markMealNotEaten } from "./meals";
 import { findMember, type Member } from "./members";
 import {
   isAllowedToSignIn,
@@ -44,6 +45,10 @@ export function createApplication(deps: ApplicationDeps) {
       planMeal(deps, input),
     removeMeal: (input: { member: Member; mealId: string }) =>
       removeMeal(deps, input),
+    markMealEaten: (input: { member: Member; mealId: string }) =>
+      markMealEaten(deps, input),
+    markMealNotEaten: (input: { member: Member; mealId: string }) =>
+      markMealNotEaten(deps, input),
 
     listDishes: (input: { member: Member }) => listDishes(deps.db, input),
   };

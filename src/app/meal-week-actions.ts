@@ -38,3 +38,19 @@ export async function removeMeal(formData: FormData) {
   }
   revalidatePath("/");
 }
+
+export async function setMealEaten(formData: FormData) {
+  const member = await requireMember();
+  const input = { member, mealId: String(formData.get("mealId")) };
+  try {
+    if (formData.get("eaten") === "true") {
+      await application().markMealEaten(input);
+    } else {
+      await application().markMealNotEaten(input);
+    }
+  } catch (error) {
+    // Removed meanwhile, e.g. by another Member: just show the current pool.
+    if (!(error instanceof MealNotFoundError)) throw error;
+  }
+  revalidatePath("/");
+}

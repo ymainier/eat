@@ -7,11 +7,12 @@ import type { DishView } from "./dishes";
 import { loadHouseholdSettings } from "./households";
 import type { Member } from "./members";
 
-export type MealView = { id: string; dish: DishView };
+export type MealView = { id: string; dish: DishView; eaten: boolean };
 
 export type MealWeekView = MealWeekPeriod & {
   mealCount: number;
   plannedMealCount: number;
+  eatenMealCount: number;
   meals: MealView[];
 };
 
@@ -46,7 +47,11 @@ export async function readMealWeek(
     );
   const pool = mealWeek
     ? await db
-        .select({ id: meals.id, dish: { id: dishes.id, name: dishes.name } })
+        .select({
+          id: meals.id,
+          dish: { id: dishes.id, name: dishes.name },
+          eaten: meals.eaten,
+        })
         .from(meals)
         .innerJoin(dishes, eq(dishes.id, meals.dishId))
         .where(eq(meals.mealWeekId, mealWeek.id))
@@ -56,6 +61,7 @@ export async function readMealWeek(
     ...target.period,
     mealCount: mealWeek?.mealCount ?? target.mealCount,
     plannedMealCount: pool.length,
+    eatenMealCount: pool.filter((meal) => meal.eaten).length,
     meals: pool,
   };
 }

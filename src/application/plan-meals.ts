@@ -1,19 +1,14 @@
-import { and, eq, inArray } from "drizzle-orm";
 import type { Database } from "../db/client";
-import { mealWeeks, meals } from "../db/schema";
+import { meals } from "../db/schema";
 import { dishName } from "../domain/dish";
 import type { Clock } from "./clock";
 import { findOrCreateDish } from "./dishes";
 import { currentMealWeekPeriod, findOrCreateMealWeek } from "./meal-weeks";
+import { MealNotFoundError, ownMeal } from "./meals";
 import type { Member } from "./members";
 
 export { DishNameRequiredError } from "../domain/dish";
-
-export class MealNotFoundError extends Error {
-  constructor(id: string) {
-    super(`Meal ${id} not found`);
-  }
-}
+export { MealNotFoundError } from "./meals";
 
 /**
  * Adds a Meal to the current Meal Week's pool. The Dish is the Household's Dish
@@ -38,20 +33,13 @@ export async function planMeal(
   });
 }
 
-const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
 export async function removeMeal(
   deps: { db: Database },
   input: { member: Member; mealId: string },
 ) {
-  if (!uuid.test(input.mealId)) throw new MealNotFoundError(input.mealId);
-  const ownMealWeeks = deps.db
-    .select({ id: mealWeeks.id })
-    .from(mealWeeks)
-    .where(eq(mealWeeks.householdId, input.member.householdId));
   const removed = await deps.db
     .delete(meals)
-    .where(and(eq(meals.id, input.mealId), inArray(meals.mealWeekId, ownMealWeeks)))
+    .where(ownMeal(deps.db, input.member, input.mealId))
     .returning({ id: meals.id });
   if (removed.length === 0) throw new MealNotFoundError(input.mealId);
 }

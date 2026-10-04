@@ -29,6 +29,13 @@
       "when": 1791144453202,
       "tag": "0003_meals_dish_fk_no_action",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791144634146,
+      "tag": "0004_meals_eaten",
+      "breakpoints": true
     }
   ]
 }

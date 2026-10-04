@@ -1,4 +1,5 @@
 import {
+  boolean,
   check,
   date,
   index,
@@ -96,6 +97,7 @@ export const meals = pgTable(
       // NO ACTION (the default) still forbids deleting a Dish in use, but checks
       // at the end of the statement, so cascades from a Household can complete.
       .references(() => dishes.id),
+    eaten: boolean("eaten").default(false).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => [index("meals_meal_week_idx").on(t.mealWeekId)],

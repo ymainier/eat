@@ -1,0 +1,1 @@
+ALTER TABLE "meals" ADD COLUMN "eaten" boolean DEFAULT false NOT NULL;
