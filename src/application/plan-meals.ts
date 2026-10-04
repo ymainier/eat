@@ -3,7 +3,7 @@ import { meals } from "../db/schema";
 import { dishName } from "../domain/dish";
 import type { Clock } from "./clock";
 import { findOrCreateDish } from "./dishes";
-import { currentMealWeekPeriod, findOrCreateMealWeek } from "./meal-weeks";
+import { findOrCreateMealWeek, targetMealWeek } from "./meal-weeks";
 import { MealNotFoundError, ownMeal } from "./meals";
 import type { Member } from "./members";
 
@@ -11,18 +11,22 @@ export { DishNameRequiredError } from "../domain/dish";
 export { MealNotFoundError } from "./meals";
 
 /**
- * Adds a Meal to the current Meal Week's pool. The Dish is the Household's Dish
+ * Adds a Meal to a Meal Week's pool (the current one unless a start date is given). The Dish is the Household's Dish
  * with that name ignoring case, or a new one. The Meal Week is created by its
  * first Meal.
  */
 export async function planMeal(
   deps: { db: Database; clock: Clock },
-  input: { member: Member; dishName: string },
+  input: { member: Member; dishName: string; mealWeekStartDate?: string },
 ) {
   const name = dishName(input.dishName);
   const { householdId } = input.member;
   return deps.db.transaction(async (tx) => {
-    const target = await currentMealWeekPeriod({ db: tx, clock: deps.clock }, input.member);
+    const target = await targetMealWeek(
+      { db: tx, clock: deps.clock },
+      input.member,
+      input.mealWeekStartDate,
+    );
     const mealWeek = await findOrCreateMealWeek(tx, householdId, target);
     const dish = await findOrCreateDish(tx, householdId, name);
     const [meal] = await tx

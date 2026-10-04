@@ -1,7 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { DishNameRequiredError, MealNotFoundError } from "@/application";
+import {
+  DishNameRequiredError,
+  MealNotFoundError,
+  MealWeekNotFoundError,
+} from "@/application";
 import { application } from "@/web/application";
 import { requireMember } from "@/web/session";
 
@@ -16,12 +20,14 @@ export async function planMeal(
     await application().planMeal({
       member,
       dishName: String(formData.get("dishName") ?? ""),
+      mealWeekStartDate: String(formData.get("mealWeekStartDate")),
     });
   } catch (error) {
     if (error instanceof DishNameRequiredError) return { error: "Type a Dish name." };
+    if (error instanceof MealWeekNotFoundError) return { error: "That Meal Week doesn't exist." };
     throw error;
   }
-  revalidatePath("/");
+  revalidatePath("/", "layout");
   return {};
 }
 
@@ -36,7 +42,7 @@ export async function removeMeal(formData: FormData) {
     // Already removed, e.g. by another Member: just show the current pool.
     if (!(error instanceof MealNotFoundError)) throw error;
   }
-  revalidatePath("/");
+  revalidatePath("/", "layout");
 }
 
 export async function setMealEaten(formData: FormData) {
@@ -52,5 +58,5 @@ export async function setMealEaten(formData: FormData) {
     // Removed meanwhile, e.g. by another Member: just show the current pool.
     if (!(error instanceof MealNotFoundError)) throw error;
   }
-  revalidatePath("/");
+  revalidatePath("/", "layout");
 }

@@ -34,8 +34,19 @@ function localDate(instant: Date, timezone: string): CalendarDate {
   }).format(instant);
 }
 
-function weekday(date: CalendarDate): Weekday {
+export function weekday(date: CalendarDate): Weekday {
   return new Date(`${date}T00:00:00Z`).getUTCDay() as Weekday;
+}
+
+/** Whether the string is a real "YYYY-MM-DD" date. */
+export function isCalendarDate(value: string): value is CalendarDate {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = new Date(`${value}T00:00:00Z`);
+  return !Number.isNaN(date.getTime()) && date.toISOString().startsWith(value);
+}
+
+export function mealWeekStartingOn(startDate: CalendarDate): MealWeekPeriod {
+  return { startDate, endDate: addDays(startDate, 6) };
 }
 
 export function addDays(date: CalendarDate, days: number): CalendarDate {

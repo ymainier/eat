@@ -4,7 +4,13 @@ import { useActionState } from "react";
 import { planMeal, type PlanMealState } from "./meal-week-actions";
 
 /** Adds a Meal by Dish name; the browser suggests existing Dishes as you type. */
-export function PlanMealForm({ dishNames }: { dishNames: string[] }) {
+export function PlanMealForm({
+  mealWeekStartDate,
+  dishNames,
+}: {
+  mealWeekStartDate: string;
+  dishNames: string[];
+}) {
   const [state, action, pending] = useActionState<PlanMealState, FormData>(
     planMeal,
     {},
@@ -12,6 +18,7 @@ export function PlanMealForm({ dishNames }: { dishNames: string[] }) {
 
   return (
     <form action={action} className="flex flex-col gap-2">
+      <input type="hidden" name="mealWeekStartDate" value={mealWeekStartDate} />
       <div className="flex gap-2">
         <label className="sr-only" htmlFor="dishName">
           Dish

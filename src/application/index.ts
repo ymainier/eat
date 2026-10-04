@@ -2,7 +2,7 @@ import type { Database } from "../db/client";
 import type { Clock } from "./clock";
 import type { EmailSender } from "./email";
 import { listDishes } from "./dishes";
-import { getCurrentMealWeek } from "./get-current-meal-week";
+import { getCurrentMealWeek, getMealWeek } from "./get-meal-week";
 import { planMeal, removeMeal } from "./plan-meals";
 import { markMealEaten, markMealNotEaten } from "./meals";
 import { findMember, type Member } from "./members";
@@ -16,7 +16,8 @@ import {
 export type { Clock } from "./clock";
 export type { Email, EmailSender } from "./email";
 export type { DishView } from "./dishes";
-export type { MealView, MealWeekView } from "./meal-weeks";
+export type { MealView, MealWeekRelation, MealWeekView } from "./meal-weeks";
+export { MealWeekNotFoundError } from "./meal-weeks";
 export { DishNameRequiredError, MealNotFoundError } from "./plan-meals";
 export type { Member } from "./members";
 export { NotAllowedToSignInError } from "./sign-in";
@@ -41,7 +42,13 @@ export function createApplication(deps: ApplicationDeps) {
 
     getCurrentMealWeek: (input: { member: Member }) =>
       getCurrentMealWeek(deps, input),
-    planMeal: (input: { member: Member; dishName: string }) =>
+    getMealWeek: (input: { member: Member; startDate: string }) =>
+      getMealWeek(deps, input),
+    planMeal: (input: {
+      member: Member;
+      dishName: string;
+      mealWeekStartDate?: string;
+    }) =>
       planMeal(deps, input),
     removeMeal: (input: { member: Member; mealId: string }) =>
       removeMeal(deps, input),
