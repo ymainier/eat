@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import type { Database } from "../db/client";
+import type { Executor } from "../db/client";
 import { households } from "../db/schema";
 import type { HouseholdSettings, Weekday } from "../domain/household";
 
@@ -10,7 +10,7 @@ export class HouseholdNotFoundError extends Error {
 }
 
 export async function loadHouseholdSettings(
-  db: Database,
+  db: Executor,
   householdId: string,
 ): Promise<HouseholdSettings> {
   const [row] = await db

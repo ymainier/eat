@@ -15,6 +15,20 @@
       "when": 1791143784769,
       "tag": "0001_auth_and_members",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791144232156,
+      "tag": "0002_dishes_and_meals",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791144453202,
+      "tag": "0003_meals_dish_fk_no_action",
+      "breakpoints": true
     }
   ]
 }
