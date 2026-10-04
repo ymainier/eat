@@ -27,7 +27,10 @@ export function MealWeekPage({
 }) {
   return (
     <main className="mx-auto w-full max-w-xl p-4">
-      <nav className="mb-6 flex justify-end">
+      <nav className="mb-6 flex justify-end gap-4 text-sm">
+        <Link href="/history" className="text-zinc-600 underline">
+          History
+        </Link>
         <form action={signOut}>
           <button type="submit" className="text-sm text-zinc-600 underline">
             Sign out

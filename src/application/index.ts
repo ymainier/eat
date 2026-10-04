@@ -4,6 +4,7 @@ import type { EmailSender } from "./email";
 import { carryOver, dismissCarryOver, getCarryOverCandidates } from "./carry-over";
 import { listDishes } from "./dishes";
 import { getCurrentMealWeek, getMealWeek } from "./get-meal-week";
+import { listPastMealWeeks } from "./history";
 import { planMeal, removeMeal } from "./plan-meals";
 import { markMealEaten, markMealNotEaten } from "./meals";
 import { findMember, type Member } from "./members";
@@ -18,6 +19,7 @@ export type { Clock } from "./clock";
 export type { Email, EmailSender } from "./email";
 export type { CarryOverCandidates } from "./carry-over";
 export type { DishView } from "./dishes";
+export type { MealWeekSummary } from "./history";
 export type { MealView, MealWeekRelation, MealWeekView } from "./meal-weeks";
 export { MealWeekNotFoundError } from "./meal-weeks";
 export { DishNameRequiredError, MealNotFoundError } from "./plan-meals";
@@ -46,6 +48,7 @@ export function createApplication(deps: ApplicationDeps) {
       getCurrentMealWeek(deps, input),
     getMealWeek: (input: { member: Member; startDate: string }) =>
       getMealWeek(deps, input),
+    listPastMealWeeks: (input: { member: Member }) => listPastMealWeeks(deps, input),
     planMeal: (input: {
       member: Member;
       dishName: string;
