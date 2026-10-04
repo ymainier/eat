@@ -1,0 +1,21 @@
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: eat
+      POSTGRES_PASSWORD: eat
+      POSTGRES_DB: eat
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./docker/create-test-databases.sql:/docker-entrypoint-initdb.d/create-test-databases.sql:ro
+    healthcheck:
+      # Over TCP: during first-run init the server only listens on its socket.
+      test: ["CMD-SHELL", "psql -h 127.0.0.1 -U eat -d eat_test_unit -c 'select 1'"]
+      interval: 1s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  db-data:
