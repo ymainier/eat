@@ -9,7 +9,7 @@ import {
   type MealWeekPeriod,
 } from "../domain/meal-week";
 import type { Clock } from "./clock";
-import type { DishView } from "./dishes";
+import { hasRecipe, type DishView } from "./dishes";
 import { loadHouseholdSettings } from "./households";
 import type { Member } from "./members";
 import { tagsOfDishes } from "./tags";
@@ -20,7 +20,11 @@ export class MealWeekNotFoundError extends Error {
   }
 }
 
-export type MealView = { id: string; dish: DishView & { tags: string[] }; eaten: boolean };
+export type MealView = {
+  id: string;
+  dish: DishView & { tags: string[]; hasRecipe: boolean };
+  eaten: boolean;
+};
 
 export type MealWeekRelation = "past" | "current" | "future";
 
@@ -94,7 +98,7 @@ export async function readMealWeek(
     ? await db
         .select({
           id: meals.id,
-          dish: { id: dishes.id, name: dishes.name },
+          dish: { id: dishes.id, name: dishes.name, hasRecipe: hasRecipe() },
           eaten: meals.eaten,
         })
         .from(meals)

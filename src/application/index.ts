@@ -14,6 +14,7 @@ import { listPastMealWeeks } from "./history";
 import { planMeal, removeMeal } from "./plan-meals";
 import { markMealEaten, markMealNotEaten } from "./meals";
 import { findMember, type Member } from "./members";
+import { getDish, removeRecipe, setRecipe } from "./recipes";
 import {
   addDishTag,
   deleteTag,
@@ -36,6 +37,9 @@ export type { CatalogueDish, DishView } from "./dishes";
 export { DishNameTakenError, DishNotFoundError } from "./dishes";
 export type { MealWeekSummary } from "./history";
 export type { TagView } from "./tags";
+export type { DishDetail } from "./recipes";
+export type { Recipe } from "../domain/recipe";
+export { EmptyRecipeError, InvalidSourceUrlError } from "../domain/recipe";
 export { TagNameRequiredError } from "../domain/tag";
 export type { MealView, MealWeekRelation, MealWeekView } from "./meal-weeks";
 export { MealWeekNotFoundError } from "./meal-weeks";
@@ -98,6 +102,16 @@ export function createApplication(deps: ApplicationDeps) {
     archiveDish: (input: { member: Member; dishId: string }) => archiveDish(deps, input),
     unarchiveDish: (input: { member: Member; dishId: string }) =>
       unarchiveDish(deps, input),
+
+    getDish: (input: { member: Member; dishId: string }) => getDish(deps, input),
+    setRecipe: (input: {
+      member: Member;
+      dishId: string;
+      ingredients: string;
+      steps: string;
+      sourceUrl?: string | null;
+    }) => setRecipe(deps, input),
+    removeRecipe: (input: { member: Member; dishId: string }) => removeRecipe(deps, input),
 
     setDishTags: (input: { member: Member; dishId: string; tags: string[] }) =>
       setDishTags(deps, input),

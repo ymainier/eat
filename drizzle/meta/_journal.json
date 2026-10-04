@@ -57,6 +57,13 @@
       "when": 1791146347004,
       "tag": "0007_dish_tags",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791146864468,
+      "tag": "0008_recipes",
+      "breakpoints": true
     }
   ]
 }

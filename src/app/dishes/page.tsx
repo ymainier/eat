@@ -104,6 +104,13 @@ export default async function DishCataloguePage({ searchParams }: PageProps<"/di
                 <RenameDishForm dishId={dish.id} name={dish.name} />
                 <DishTags dishId={dish.id} dishName={dish.name} tags={dish.tags} />
                 <p className="px-2 text-sm text-zinc-500">
+                  <Link
+                    href={`/dishes/${dish.id}`}
+                    aria-label={`${dish.hasRecipe ? "Recipe" : "Add Recipe"} for ${dish.name}`}
+                    className={`mr-2 underline ${dish.hasRecipe ? "font-medium text-emerald-700" : ""}`}
+                  >
+                    {dish.hasRecipe ? "Recipe" : "Add Recipe"}
+                  </Link>
                   {dish.lastPlannedIn
                     ? `Last planned in the Meal Week of ${formatDay(dish.lastPlannedIn)}`
                     : "Never planned"}

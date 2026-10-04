@@ -1,6 +1,6 @@
 import { and, asc, eq, exists, ilike, isNotNull, isNull, max, sql } from "drizzle-orm";
 import type { Database, Executor } from "../db/client";
-import { dishTags, dishes, mealWeeks, meals } from "../db/schema";
+import { dishTags, dishes, mealWeeks, meals, recipes } from "../db/schema";
 import { dishName } from "../domain/dish";
 import type { CalendarDate } from "../domain/meal-week";
 import { isUuid } from "./meals";
@@ -27,6 +27,7 @@ export type DishView = { id: string; name: string };
 
 export type CatalogueDish = DishView & {
   tags: string[];
+  hasRecipe: boolean;
   archived: boolean;
   /** Start date of the latest Meal Week the Dish was planned in. */
   lastPlannedIn: CalendarDate | null;
@@ -67,6 +68,7 @@ export async function listDishes(
       id: dishes.id,
       name: dishes.name,
       archivedAt: dishes.archivedAt,
+      hasRecipe: hasRecipe(),
       lastPlannedIn: max(mealWeeks.startDate),
     })
     .from(dishes)
@@ -100,6 +102,21 @@ export async function listDishes(
     tags: tags.get(dish.id)!,
     archived: archivedAt !== null,
   }));
+}
+
+/** Whether the Dish in the query has a Recipe. */
+export const hasRecipe = () =>
+  sql<boolean>`exists (select 1 from ${recipes} where ${recipes.dishId} = ${dishes.id})`;
+
+/** The Household's Dish, or DishNotFoundError. */
+export async function findOwnDish(db: Executor, member: Member, dishId: string) {
+  if (!isUuid(dishId)) throw new DishNotFoundError(dishId);
+  const [dish] = await db
+    .select()
+    .from(dishes)
+    .where(and(eq(dishes.id, dishId), eq(dishes.householdId, member.householdId)));
+  if (!dish) throw new DishNotFoundError(dishId);
+  return dish;
 }
 
 const escapeLike = (text: string) => text.replace(/[\\%_]/g, (c) => `\\${c}`);

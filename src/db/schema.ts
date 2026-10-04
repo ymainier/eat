@@ -119,3 +119,14 @@ export const dishTags = pgTable(
   },
   (t) => [uniqueIndex("dish_tags_dish_name_unique").on(t.dishId, sql`lower(${t.name})`)],
 );
+
+// A Dish has at most one Recipe, so the Dish is its key.
+export const recipes = pgTable("recipes", {
+  dishId: uuid("dish_id")
+    .primaryKey()
+    .references(() => dishes.id, { onDelete: "cascade" }),
+  ingredients: text("ingredients").notNull(),
+  steps: text("steps").notNull(),
+  sourceUrl: text("source_url"),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});

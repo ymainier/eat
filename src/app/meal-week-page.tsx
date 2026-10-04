@@ -109,6 +109,15 @@ export function MealWeekPage({
                   className={meal.eaten ? "text-zinc-400 line-through" : "font-medium"}
                 >
                   {meal.dish.name}
+                  {meal.dish.hasRecipe && (
+                    <Link
+                      href={`/dishes/${meal.dish.id}`}
+                      aria-label={`Recipe for ${meal.dish.name}`}
+                      className="ml-2 text-sm font-normal text-emerald-700 underline"
+                    >
+                      Recipe
+                    </Link>
+                  )}
                 </span>
                 {meal.dish.tags.length > 0 && (
                   <span className="text-xs text-zinc-500">{meal.dish.tags.join(" · ")}</span>
