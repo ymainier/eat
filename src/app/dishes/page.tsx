@@ -4,13 +4,26 @@ import { formatDay } from "@/web/format";
 import { requireMember } from "@/web/session";
 import { setDishArchived } from "./actions";
 import { CreateDishForm, RenameDishForm } from "./dish-forms";
+import { DishTags } from "./dish-tags";
 
 export default async function DishCataloguePage({ searchParams }: PageProps<"/dishes">) {
   const params = await searchParams;
   const search = typeof params.search === "string" ? params.search : "";
   const archived = params.archived === "1";
+  const tag = typeof params.tag === "string" && params.tag ? params.tag : undefined;
   const member = await requireMember();
-  const dishes = await application().listDishes({ member, search, archived });
+  const [dishes, tags] = await Promise.all([
+    application().listDishes({ member, search, archived, tag }),
+    application().listTags({ member }),
+  ]);
+  const filterHref = (filterTag?: string) => {
+    const query = new URLSearchParams();
+    if (archived) query.set("archived", "1");
+    if (search) query.set("search", search);
+    if (filterTag) query.set("tag", filterTag);
+    const encoded = query.toString();
+    return encoded ? `/dishes?${encoded}` : "/dishes";
+  };
 
   return (
     <main className="mx-auto w-full max-w-xl p-4">
@@ -29,6 +42,7 @@ export default async function DishCataloguePage({ searchParams }: PageProps<"/di
 
       <form role="search" className="mb-2 flex gap-2">
         {archived && <input type="hidden" name="archived" value="1" />}
+        {tag && <input type="hidden" name="tag" value={tag} />}
         <label className="sr-only" htmlFor="search">
           Search Dishes
         </label>
@@ -44,11 +58,41 @@ export default async function DishCataloguePage({ searchParams }: PageProps<"/di
           Search
         </button>
       </form>
-      <p className="mb-4 text-sm">
+      <p className="mb-4 flex gap-4 text-sm">
         <Link href={archived ? "/dishes" : "/dishes?archived=1"} className="underline">
           {archived ? "Show active Dishes" : "Show Archived Dishes"}
         </Link>
+        <Link href="/tags" className="underline">
+          Manage Tags
+        </Link>
       </p>
+
+      {(tags.length > 0 || tag) && (
+        <nav aria-label="Filter by Tag" className="mb-4 flex flex-wrap gap-2 text-sm">
+          <Link
+            href={filterHref()}
+            aria-current={tag ? undefined : "page"}
+            className="rounded-full border px-3 py-1 aria-[current=page]:bg-zinc-900 aria-[current=page]:text-white"
+          >
+            All
+          </Link>
+          {tags.map((t) => (
+            <Link
+              key={t.name}
+              href={filterHref(t.name)}
+              aria-current={tag?.toLowerCase() === t.name.toLowerCase() ? "page" : undefined}
+              className="rounded-full border px-3 py-1 aria-[current=page]:bg-zinc-900 aria-[current=page]:text-white"
+            >
+              {t.name}
+            </Link>
+          ))}
+        </nav>
+      )}
+      <datalist id="tag-names">
+        {tags.map((t) => (
+          <option key={t.name} value={t.name} />
+        ))}
+      </datalist>
 
       {dishes.length === 0 ? (
         <p className="text-zinc-500">No Dishes found.</p>
@@ -58,6 +102,7 @@ export default async function DishCataloguePage({ searchParams }: PageProps<"/di
             <li key={dish.id} className="flex items-start gap-3 py-3">
               <div className="flex-1">
                 <RenameDishForm dishId={dish.id} name={dish.name} />
+                <DishTags dishId={dish.id} dishName={dish.name} tags={dish.tags} />
                 <p className="px-2 text-sm text-zinc-500">
                   {dish.lastPlannedIn
                     ? `Last planned in the Meal Week of ${formatDay(dish.lastPlannedIn)}`

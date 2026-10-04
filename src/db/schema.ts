@@ -106,3 +106,16 @@ export const meals = pgTable(
   },
   (t) => [index("meals_meal_week_idx").on(t.mealWeekId)],
 );
+
+// A Tag has no table of its own: it exists only while a Dish carries it.
+export const dishTags = pgTable(
+  "dish_tags",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    dishId: uuid("dish_id")
+      .notNull()
+      .references(() => dishes.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+  },
+  (t) => [uniqueIndex("dish_tags_dish_name_unique").on(t.dishId, sql`lower(${t.name})`)],
+);

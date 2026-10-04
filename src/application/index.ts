@@ -15,6 +15,14 @@ import { planMeal, removeMeal } from "./plan-meals";
 import { markMealEaten, markMealNotEaten } from "./meals";
 import { findMember, type Member } from "./members";
 import {
+  addDishTag,
+  deleteTag,
+  listTags,
+  removeDishTag,
+  renameTag,
+  setDishTags,
+} from "./tags";
+import {
   isAllowedToSignIn,
   joinHousehold,
   sendSignInLink,
@@ -27,6 +35,8 @@ export type { CarryOverCandidates } from "./carry-over";
 export type { CatalogueDish, DishView } from "./dishes";
 export { DishNameTakenError, DishNotFoundError } from "./dishes";
 export type { MealWeekSummary } from "./history";
+export type { TagView } from "./tags";
+export { TagNameRequiredError } from "../domain/tag";
 export type { MealView, MealWeekRelation, MealWeekView } from "./meal-weeks";
 export { MealWeekNotFoundError } from "./meal-weeks";
 export { DishNameRequiredError, MealNotFoundError } from "./plan-meals";
@@ -76,14 +86,29 @@ export function createApplication(deps: ApplicationDeps) {
     dismissCarryOver: (input: { member: Member; fromStartDate: string }) =>
       dismissCarryOver(deps, input),
 
-    listDishes: (input: { member: Member; search?: string; archived?: boolean }) =>
-      listDishes(deps.db, input),
+    listDishes: (input: {
+      member: Member;
+      search?: string;
+      archived?: boolean;
+      tag?: string;
+    }) => listDishes(deps.db, input),
     createDish: (input: { member: Member; name: string }) => createDish(deps, input),
     renameDish: (input: { member: Member; dishId: string; name: string }) =>
       renameDish(deps, input),
     archiveDish: (input: { member: Member; dishId: string }) => archiveDish(deps, input),
     unarchiveDish: (input: { member: Member; dishId: string }) =>
       unarchiveDish(deps, input),
+
+    setDishTags: (input: { member: Member; dishId: string; tags: string[] }) =>
+      setDishTags(deps, input),
+    addDishTag: (input: { member: Member; dishId: string; tag: string }) =>
+      addDishTag(deps, input),
+    removeDishTag: (input: { member: Member; dishId: string; tag: string }) =>
+      removeDishTag(deps, input),
+    listTags: (input: { member: Member }) => listTags(deps, input),
+    renameTag: (input: { member: Member; name: string; newName: string }) =>
+      renameTag(deps, input),
+    deleteTag: (input: { member: Member; name: string }) => deleteTag(deps, input),
   };
 }
 

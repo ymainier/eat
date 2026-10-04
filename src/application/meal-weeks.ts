@@ -12,6 +12,7 @@ import type { Clock } from "./clock";
 import type { DishView } from "./dishes";
 import { loadHouseholdSettings } from "./households";
 import type { Member } from "./members";
+import { tagsOfDishes } from "./tags";
 
 export class MealWeekNotFoundError extends Error {
   constructor(startDate: string) {
@@ -19,7 +20,7 @@ export class MealWeekNotFoundError extends Error {
   }
 }
 
-export type MealView = { id: string; dish: DishView; eaten: boolean };
+export type MealView = { id: string; dish: DishView & { tags: string[] }; eaten: boolean };
 
 export type MealWeekRelation = "past" | "current" | "future";
 
@@ -101,13 +102,18 @@ export async function readMealWeek(
         .where(eq(meals.mealWeekId, mealWeek.id))
         .orderBy(asc(meals.createdAt), asc(meals.id))
     : [];
+  const tags = await tagsOfDishes(db, [...new Set(pool.map((meal) => meal.dish.id))]);
+  const mealsWithTags = pool.map((meal) => ({
+    ...meal,
+    dish: { ...meal.dish, tags: tags.get(meal.dish.id)! },
+  }));
   return {
     ...target.period,
     relation: target.relation,
     mealCount: mealWeek?.mealCount ?? target.mealCount,
     plannedMealCount: pool.length,
     eatenMealCount: pool.filter((meal) => meal.eaten).length,
-    meals: pool,
+    meals: mealsWithTags,
   };
 }
 

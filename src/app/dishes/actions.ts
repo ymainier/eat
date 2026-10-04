@@ -1,10 +1,15 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { DishNameTakenError, DishNotFoundError } from "@/application";
+import {
+  DishNameTakenError,
+  DishNotFoundError,
+  TagNameRequiredError,
+} from "@/application";
 import { DishNameRequiredError } from "@/domain/dish";
 import { application } from "@/web/application";
 import { requireMember } from "@/web/session";
+import type { Member } from "@/application";
 
 export type DishFormState = {
   error?: string;
@@ -70,6 +75,33 @@ export async function setDishArchived(formData: FormData) {
     }
   } catch (error) {
     if (!(error instanceof DishNotFoundError)) throw error;
+  }
+  revalidatePath("/", "layout");
+}
+
+export async function addDishTag(formData: FormData) {
+  await changeTag(formData, (input) => application().addDishTag(input));
+}
+
+export async function removeDishTag(formData: FormData) {
+  await changeTag(formData, (input) => application().removeDishTag(input));
+}
+
+async function changeTag(
+  formData: FormData,
+  change: (input: { member: Member; dishId: string; tag: string }) => Promise<void>,
+) {
+  const member = await requireMember();
+  try {
+    await change({
+      member,
+      dishId: String(formData.get("dishId")),
+      tag: String(formData.get("tag") ?? ""),
+    });
+  } catch (error) {
+    if (!(error instanceof DishNotFoundError || error instanceof TagNameRequiredError)) {
+      throw error;
+    }
   }
   revalidatePath("/", "layout");
 }

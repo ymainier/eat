@@ -104,13 +104,16 @@ export function MealWeekPage({
                   {meal.eaten && <span aria-hidden>✓</span>}
                 </button>
               </form>
-              <span
-                className={`flex-1 ${
-                  meal.eaten ? "text-zinc-400 line-through" : "font-medium"
-                }`}
-              >
-                {meal.dish.name}
-              </span>
+              <div className="flex flex-1 flex-col">
+                <span
+                  className={meal.eaten ? "text-zinc-400 line-through" : "font-medium"}
+                >
+                  {meal.dish.name}
+                </span>
+                {meal.dish.tags.length > 0 && (
+                  <span className="text-xs text-zinc-500">{meal.dish.tags.join(" · ")}</span>
+                )}
+              </div>
               <form action={removeMeal}>
                 <input type="hidden" name="mealId" value={meal.id} />
                 <button

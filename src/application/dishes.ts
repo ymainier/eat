@@ -1,10 +1,11 @@
-import { and, asc, eq, ilike, isNotNull, isNull, max, sql } from "drizzle-orm";
+import { and, asc, eq, exists, ilike, isNotNull, isNull, max, sql } from "drizzle-orm";
 import type { Database, Executor } from "../db/client";
-import { dishes, mealWeeks, meals } from "../db/schema";
+import { dishTags, dishes, mealWeeks, meals } from "../db/schema";
 import { dishName } from "../domain/dish";
 import type { CalendarDate } from "../domain/meal-week";
 import { isUuid } from "./meals";
 import type { Member } from "./members";
+import { tagsOfDishes } from "./tags";
 
 export class DishNameTakenError extends Error {
   constructor(
@@ -25,6 +26,7 @@ export class DishNotFoundError extends Error {
 export type DishView = { id: string; name: string };
 
 export type CatalogueDish = DishView & {
+  tags: string[];
   archived: boolean;
   /** Start date of the latest Meal Week the Dish was planned in. */
   lastPlannedIn: CalendarDate | null;
@@ -51,10 +53,13 @@ export async function findOrCreateDish(
   return dish;
 }
 
-/** Active Dishes by name, or Archived Dishes with `archived: true`. */
+/**
+ * Active Dishes by name, or Archived Dishes with `archived: true`; optionally
+ * only those whose name contains `search` or that carry `tag` (ignoring case).
+ */
 export async function listDishes(
   db: Executor,
-  input: { member: Member; search?: string; archived?: boolean },
+  input: { member: Member; search?: string; archived?: boolean; tag?: string },
 ): Promise<CatalogueDish[]> {
   const search = input.search?.trim();
   const rows = await db
@@ -72,11 +77,29 @@ export async function listDishes(
         eq(dishes.householdId, input.member.householdId),
         input.archived ? isNotNull(dishes.archivedAt) : isNull(dishes.archivedAt),
         search ? ilike(dishes.name, `%${escapeLike(search)}%`) : undefined,
+        input.tag
+          ? exists(
+              db
+                .select({ id: dishTags.id })
+                .from(dishTags)
+                .where(
+                  and(
+                    eq(dishTags.dishId, dishes.id),
+                    sql`lower(${dishTags.name}) = lower(${input.tag})`,
+                  ),
+                ),
+            )
+          : undefined,
       ),
     )
     .groupBy(dishes.id)
     .orderBy(asc(sql`lower(${dishes.name})`));
-  return rows.map(({ archivedAt, ...dish }) => ({ ...dish, archived: archivedAt !== null }));
+  const tags = await tagsOfDishes(db, rows.map((row) => row.id));
+  return rows.map(({ archivedAt, ...dish }) => ({
+    ...dish,
+    tags: tags.get(dish.id)!,
+    archived: archivedAt !== null,
+  }));
 }
 
 const escapeLike = (text: string) => text.replace(/[\\%_]/g, (c) => `\\${c}`);
