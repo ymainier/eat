@@ -43,6 +43,13 @@
       "when": 1791145139575,
       "tag": "0005_carry_over_handled",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791145902158,
+      "tag": "0006_dishes_archived",
+      "breakpoints": true
     }
   ]
 }

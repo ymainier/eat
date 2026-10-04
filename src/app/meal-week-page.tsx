@@ -28,6 +28,9 @@ export function MealWeekPage({
   return (
     <main className="mx-auto w-full max-w-xl p-4">
       <nav className="mb-6 flex justify-end gap-4 text-sm">
+        <Link href="/dishes" className="text-zinc-600 underline">
+          Dishes
+        </Link>
         <Link href="/history" className="text-zinc-600 underline">
           History
         </Link>

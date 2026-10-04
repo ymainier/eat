@@ -2,7 +2,13 @@ import type { Database } from "../db/client";
 import type { Clock } from "./clock";
 import type { EmailSender } from "./email";
 import { carryOver, dismissCarryOver, getCarryOverCandidates } from "./carry-over";
-import { listDishes } from "./dishes";
+import {
+  archiveDish,
+  createDish,
+  listDishes,
+  renameDish,
+  unarchiveDish,
+} from "./dishes";
 import { getCurrentMealWeek, getMealWeek } from "./get-meal-week";
 import { listPastMealWeeks } from "./history";
 import { planMeal, removeMeal } from "./plan-meals";
@@ -18,7 +24,8 @@ import {
 export type { Clock } from "./clock";
 export type { Email, EmailSender } from "./email";
 export type { CarryOverCandidates } from "./carry-over";
-export type { DishView } from "./dishes";
+export type { CatalogueDish, DishView } from "./dishes";
+export { DishNameTakenError, DishNotFoundError } from "./dishes";
 export type { MealWeekSummary } from "./history";
 export type { MealView, MealWeekRelation, MealWeekView } from "./meal-weeks";
 export { MealWeekNotFoundError } from "./meal-weeks";
@@ -69,7 +76,14 @@ export function createApplication(deps: ApplicationDeps) {
     dismissCarryOver: (input: { member: Member; fromStartDate: string }) =>
       dismissCarryOver(deps, input),
 
-    listDishes: (input: { member: Member }) => listDishes(deps.db, input),
+    listDishes: (input: { member: Member; search?: string; archived?: boolean }) =>
+      listDishes(deps.db, input),
+    createDish: (input: { member: Member; name: string }) => createDish(deps, input),
+    renameDish: (input: { member: Member; dishId: string; name: string }) =>
+      renameDish(deps, input),
+    archiveDish: (input: { member: Member; dishId: string }) => archiveDish(deps, input),
+    unarchiveDish: (input: { member: Member; dishId: string }) =>
+      unarchiveDish(deps, input),
   };
 }
 
