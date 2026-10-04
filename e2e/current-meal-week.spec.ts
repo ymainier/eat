@@ -1,6 +1,7 @@
 import { expect, test } from "./fixtures";
 
-test("opening the app shows the current Meal Week", async ({ page }) => {
+test("opening the app shows the current Meal Week", async ({ page, signIn }) => {
+  await signIn();
   await page.goto("/");
 
   await expect(

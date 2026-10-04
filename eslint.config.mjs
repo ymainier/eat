@@ -23,7 +23,7 @@ const eslintConfig = defineConfig([
   },
   {
     // ADR-0002: the domain and application layers know nothing of their clients.
-    files: ["src/domain/**", "src/application/**", "src/db/**"],
+    files: ["src/domain/**", "src/application/**", "src/db/**", "src/email/**", "src/auth/**"],
     rules: {
       "no-restricted-imports": [
         "error",

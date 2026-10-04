@@ -1,16 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { createApplication } from ".";
-import { fixedClock } from "./clock";
-import { seedHousehold } from "../db/seed";
 import { setUpTestDatabase } from "../test/database";
+import { signedInMember, testApplication } from "../test/application";
 import type { HouseholdSettings } from "../domain/household";
 
 const db = setUpTestDatabase();
 
 async function currentMealWeekAt(now: string, settings: HouseholdSettings) {
-  const householdId = await seedHousehold(db, settings);
-  const app = createApplication({ db, clock: fixedClock(now) });
-  return app.getCurrentMealWeek({ householdId });
+  const member = await signedInMember(db, settings);
+  return testApplication(db, { now }).getCurrentMealWeek({ member });
 }
 
 const london: HouseholdSettings = {
