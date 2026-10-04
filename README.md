@@ -44,3 +44,7 @@ npm run lint
 - **Vitest** migrates `eat_test_unit` once, then truncates it before each test.
 - **Playwright** signs in through the real magic-link flow only in `e2e/sign-in.spec.ts`, reading the link from the outbox; every other test uses the `signIn` fixture, which injects a session cookie.
 - **Playwright** starts its own dev server on port 3100 (in `.next-e2e`, so it can run beside `npm run dev`), migrates `eat_test` on startup and truncates and re-seeds it before each test, with a single worker. The app's clock is pinned to Monday 5 Oct 2026 through `EAT_CLOCK_NOW`, which is ignored in production.
+
+## Deploying
+
+See [`docs/deploy.md`](docs/deploy.md) for Vercel, Neon and Resend setup. Production builds run `npm run build:vercel`, which applies migrations before `next build`.

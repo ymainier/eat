@@ -9,7 +9,10 @@ import { application, auth } from "./application";
  * is retried on the next request rather than leaving them without a Membership.
  */
 export async function requireMember(): Promise<Member> {
-  const session = await auth().api.getSession({ headers: await headers() });
+  // Reading the request first makes every signed-in page render per request,
+  // never at build time.
+  const requestHeaders = await headers();
+  const session = await auth().api.getSession({ headers: requestHeaders });
   if (!session) redirect("/sign-in");
   const app = application();
   const identity = { userId: session.user.id, email: session.user.email };
