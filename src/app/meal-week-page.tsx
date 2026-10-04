@@ -1,7 +1,8 @@
 import Link from "next/link";
-import type { DishView, MealWeekView } from "@/application";
+import type { CarryOverCandidates, DishView, MealWeekView } from "@/application";
 import { addDays } from "@/domain/meal-week";
 import { formatDay } from "@/web/format";
+import { CarryOverPrompt } from "./carry-over-prompt";
 import { removeMeal, setMealEaten } from "./meal-week-actions";
 import { PlanMealForm } from "./plan-meal-form";
 import { signOut } from "./sign-in/actions";
@@ -17,9 +18,12 @@ const relationLabel = {
 export function MealWeekPage({
   mealWeek,
   dishes,
+  carryOverCandidates,
 }: {
   mealWeek: MealWeekView;
   dishes: DishView[];
+  /** Offered on the current Meal Week only. */
+  carryOverCandidates?: CarryOverCandidates | null;
 }) {
   return (
     <main className="mx-auto w-full max-w-xl p-4">
@@ -57,6 +61,8 @@ export function MealWeekPage({
           {mealWeek.plannedMealCount} / {mealWeek.mealCount}
         </p>
       </header>
+
+      {carryOverCandidates && <CarryOverPrompt candidates={carryOverCandidates} />}
 
       <PlanMealForm
         mealWeekStartDate={mealWeek.startDate}

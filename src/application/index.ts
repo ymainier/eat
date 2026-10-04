@@ -1,6 +1,7 @@
 import type { Database } from "../db/client";
 import type { Clock } from "./clock";
 import type { EmailSender } from "./email";
+import { carryOver, dismissCarryOver, getCarryOverCandidates } from "./carry-over";
 import { listDishes } from "./dishes";
 import { getCurrentMealWeek, getMealWeek } from "./get-meal-week";
 import { planMeal, removeMeal } from "./plan-meals";
@@ -15,6 +16,7 @@ import {
 
 export type { Clock } from "./clock";
 export type { Email, EmailSender } from "./email";
+export type { CarryOverCandidates } from "./carry-over";
 export type { DishView } from "./dishes";
 export type { MealView, MealWeekRelation, MealWeekView } from "./meal-weeks";
 export { MealWeekNotFoundError } from "./meal-weeks";
@@ -56,6 +58,13 @@ export function createApplication(deps: ApplicationDeps) {
       markMealEaten(deps, input),
     markMealNotEaten: (input: { member: Member; mealId: string }) =>
       markMealNotEaten(deps, input),
+
+    getCarryOverCandidates: (input: { member: Member }) =>
+      getCarryOverCandidates(deps, input),
+    carryOver: (input: { member: Member; fromStartDate: string; mealIds: string[] }) =>
+      carryOver(deps, input),
+    dismissCarryOver: (input: { member: Member; fromStartDate: string }) =>
+      dismissCarryOver(deps, input),
 
     listDishes: (input: { member: Member }) => listDishes(deps.db, input),
   };

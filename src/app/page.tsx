@@ -7,9 +7,16 @@ export default async function CurrentMealWeekPage() {
   await connection();
   const member = await requireMember();
   const app = application();
-  const [mealWeek, dishes] = await Promise.all([
+  const [mealWeek, dishes, carryOverCandidates] = await Promise.all([
     app.getCurrentMealWeek({ member }),
     app.listDishes({ member }),
+    app.getCarryOverCandidates({ member }),
   ]);
-  return <MealWeekPage mealWeek={mealWeek} dishes={dishes} />;
+  return (
+    <MealWeekPage
+      mealWeek={mealWeek}
+      dishes={dishes}
+      carryOverCandidates={carryOverCandidates}
+    />
+  );
 }

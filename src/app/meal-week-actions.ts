@@ -60,3 +60,22 @@ export async function setMealEaten(formData: FormData) {
   }
   revalidatePath("/", "layout");
 }
+
+export async function carryOver(formData: FormData) {
+  const member = await requireMember();
+  await application().carryOver({
+    member,
+    fromStartDate: String(formData.get("fromStartDate")),
+    mealIds: formData.getAll("mealId").map(String),
+  });
+  revalidatePath("/", "layout");
+}
+
+export async function dismissCarryOver(formData: FormData) {
+  const member = await requireMember();
+  await application().dismissCarryOver({
+    member,
+    fromStartDate: String(formData.get("fromStartDate")),
+  });
+  revalidatePath("/", "layout");
+}

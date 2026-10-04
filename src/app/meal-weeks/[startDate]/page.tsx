@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { MealWeekNotFoundError } from "@/application";
 import { application } from "@/web/application";
 import { requireMember } from "@/web/session";
@@ -17,5 +17,7 @@ export default async function MealWeekByStartDatePage({
     }),
     app.listDishes({ member }),
   ]);
+  // The current Meal Week lives at "/", where Carry Over is offered.
+  if (mealWeek.relation === "current") redirect("/");
   return <MealWeekPage mealWeek={mealWeek} dishes={dishes} />;
 }

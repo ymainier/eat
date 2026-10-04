@@ -1,0 +1,1 @@
+ALTER TABLE "meal_weeks" ADD COLUMN "carry_over_handled_at" timestamp with time zone;

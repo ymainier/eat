@@ -31,7 +31,7 @@ export type MealWeekView = MealWeekPeriod & {
   meals: MealView[];
 };
 
-type MealWeekTarget = {
+export type MealWeekTarget = {
   period: MealWeekPeriod;
   relation: MealWeekRelation;
   /** The Meal Count the Meal Week gets if it is created now. */
@@ -70,9 +70,13 @@ export async function targetMealWeek(
   };
 }
 
-async function findMealWeek(db: Executor, householdId: string, startDate: string) {
+export async function findMealWeek(db: Executor, householdId: string, startDate: string) {
   const [mealWeek] = await db
-    .select({ id: mealWeeks.id, mealCount: mealWeeks.mealCount })
+    .select({
+      id: mealWeeks.id,
+      mealCount: mealWeeks.mealCount,
+      carryOverHandledAt: mealWeeks.carryOverHandledAt,
+    })
     .from(mealWeeks)
     .where(and(eq(mealWeeks.householdId, householdId), eq(mealWeeks.startDate, startDate)));
   return mealWeek ?? null;

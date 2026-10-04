@@ -80,6 +80,8 @@ export const mealWeeks = pgTable(
     startDate: date("start_date").notNull(),
     // Copied from the Household's settings when the Meal Week is created.
     mealCount: integer("meal_count").notNull(),
+    // When a Member carried Meals over from this Meal Week, or dismissed doing so.
+    carryOverHandledAt: timestamp("carry_over_handled_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => [uniqueIndex("meal_weeks_household_start_unique").on(t.householdId, t.startDate)],

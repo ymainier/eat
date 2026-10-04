@@ -10,10 +10,11 @@ export class MealNotFoundError extends Error {
 }
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+export const isUuid = (value: string) => uuid.test(value);
 
 /** Matches the Meal only if it belongs to the Member's Household. */
 export function ownMeal(db: Database, member: Member, mealId: string) {
-  if (!uuid.test(mealId)) throw new MealNotFoundError(mealId);
+  if (!isUuid(mealId)) throw new MealNotFoundError(mealId);
   const householdMealWeeks = db
     .select({ id: mealWeeks.id })
     .from(mealWeeks)
