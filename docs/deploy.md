@@ -183,13 +183,15 @@ Environment variables only reach **new** deployments, so you'll redeploy in step
 
 The database needs its tables and the single Household before anyone can sign in. Run these once, from the repository:
 
-```sh
-vercel link                                          # only if not already linked in step 2
-vercel env run -e production -- npm run db:migrate   # create the tables in Neon
-vercel env run -e production -- npm run db:seed      # create the Household
-```
+1. Copy the production connection string. In Vercel, open **Storage → eat**, choose the **.env.local** or Quickstart tab, click **Show secret** and copy `DATABASE_URL`. It contains `neon.tech`. `vercel integration open neon eat` opens the Neon console, which shows it too.
+2. Run, pasting it in:
 
-`vercel env run` runs the command with the project's production variables, without writing them to disk.
+   ```sh
+   DATABASE_URL='postgresql://…neon.tech/…' npm run db:migrate   # create the tables in Neon
+   DATABASE_URL='postgresql://…neon.tech/…' npm run db:seed      # create the Household
+   ```
+
+Set `DATABASE_URL` explicitly like this. `vercel env run -e production -- …` looks like the obvious tool, but it can't read Sensitive values, and it also loads your local `.env`. The commands then quietly run against your local Docker database. When that happens, the seed prints the ID of your local Household, not a new one.
 
 The seed creates the Household with these settings. You can change all of them later on the app's **Settings** page.
 
@@ -200,13 +202,6 @@ The seed creates the Household with these settings. You can change all of them l
 | Timezone | Europe/London |
 
 The seed does nothing if the Household already exists, so running it twice is harmless.
-
-> If either command says `DATABASE_URL is not set`, the CLI couldn't read the variable. One cause is a variable marked Sensitive, which the CLI can't read. Instead, copy the connection string from **Storage → eat → Quickstart** in Vercel (or from the Neon console) and run:
->
-> ```sh
-> DATABASE_URL='postgresql://…' npm run db:migrate
-> DATABASE_URL='postgresql://…' npm run db:seed
-> ```
 
 ## 6. Deploy
 
@@ -248,7 +243,7 @@ Once all of that works, issue #12 is done.
 | The email never arrives, but Resend shows it as delivered | Check spam. Add the DMARC record (step 1.2.5) and send from a subdomain. |
 | The link opens the sign-in page with "That sign-in link didn't work" | The link expired (5 minutes) or was already used. Ask for a new one. |
 | Sign-in fails when using a long `…-git-…vercel.app` or deployment URL | Always use the production domain in `BETTER_AUTH_URL`. Sign-in only accepts requests from that origin. |
-| Error `No Household exists yet; run the seed` | Run the seed (step 5). |
+| Error `No Household exists yet; run the seed` | Run the seed against the production database (step 5). If it printed your local Household's ID, it ran against Docker: set `DATABASE_URL` explicitly. |
 | First page after a while is slow | Neon waking from scale-to-zero; normal on the free plan. |
 
 ## Free-tier limits worth knowing
