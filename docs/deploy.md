@@ -79,15 +79,66 @@ Send from a subdomain such as `mail.example.com` rather than `example.com` itsel
 
 ## 2. Create the Vercel project
 
+Do this either from the terminal (2a, no failed first deployment) or from the dashboard (2b). Either way the build settings come from `vercel.json`, so there's nothing to configure.
+
+### 2a. From the terminal
+
+From the repository root:
+
+```sh
+vercel link
+```
+
+Answer the prompts:
+
+1. **Set up "~/src/eat"?** Yes.
+2. **Which scope?** Your personal account.
+3. **Link to existing project?** **No**. This creates a new project.
+4. **Project name?** `eat`.
+5. **In which directory is your code located?** `./`.
+6. It detects **Next.js**. Don't modify the settings.
+
+This creates the project without deploying anything, and writes `.vercel/` locally. `.vercel/` is gitignored, so it isn't committed.
+
+Then connect the GitHub repository, so every push to `main` deploys:
+
+```sh
+vercel git connect
+```
+
+The CLI reads the `origin` remote (`github.com/ymainier/eat`) and asks for confirmation. If it says it can't access the repository, Vercel's GitHub app doesn't have access yet. Grant it at <https://github.com/apps/vercel> (**Configure** → add `ymainier/eat`), then run the command again.
+
+### 2b. From the dashboard
+
 1. In Vercel, click **Add New… → Project** and import the GitHub repository `ymainier/eat`.
-2. Leave the defaults:
-   - Framework is detected as **Next.js**.
-   - The build command comes from `vercel.json`. Don't override it.
-   - The root directory is `./`.
-3. Click **Deploy**. **This first deployment is expected to fail** with `DATABASE_URL is not set`, because there is no database yet. That's fine: it creates the project.
-4. Open **Settings → Domains** and note the production domain, e.g. `eat-ymainier.vercel.app`. Your production URL is `https://` followed by that domain. You'll need it in step 4.
+2. Leave the defaults (Next.js, root directory `./`, build command from `vercel.json`) and click **Deploy**.
+3. **This first deployment is expected to fail** with `DATABASE_URL is not set`, because there is no database yet. That's fine: it created the project.
+4. Run `vercel link` from the repository and pick the existing `eat` project. Steps 3 to 5 use the CLI.
+
+### Your production URL
+
+Production deployments are served at `https://<project-name>.vercel.app`. If that name is taken, the domain gets a suffix, e.g. `eat-ymainier.vercel.app`. Find the exact domain under **Settings → Domains** in the project (`vercel project inspect` also shows it).
+
+You need it for `BETTER_AUTH_URL` in step 4. With 2a the domain may only appear after the first production deployment. If so, add `BETTER_AUTH_URL` after step 6 and redeploy once more. Sign-in won't work until it's set, but everything else deploys fine.
 
 ## 3. Add the database (Neon via the Vercel Marketplace)
+
+### From the terminal
+
+With the project linked (step 2):
+
+```sh
+vercel integration add neon --help    # shows the plans and metadata keys, e.g. the region key and its values
+vercel integration add neon --name eat --environment production --no-env-pull
+```
+
+- The command prompts for anything you don't pass as flags. Choose the **free** plan and the **London** region, as described in the settings below. To skip the prompts, pass the plan with `--plan` and the region with `--metadata <key>=<value>`, using the exact names that `--help` printed.
+- `--environment production` connects the database to Production only.
+- `--no-env-pull` stops the CLI writing the production database URL into a local `.env.local`, which would override your local Docker database.
+
+If Neon isn't installed on your Vercel account yet, the command installs it first and may ask you to accept Neon's terms.
+
+### From the dashboard
 
 1. In the project, open the **Storage** tab, then **Create Database → Neon**. Alternatively, go to <https://vercel.com/marketplace/neon> and click **Install**.
 2. If asked, choose **Create New Neon Account**. This Vercel-managed account is billed through Vercel and stays on the free plan. If you already have a Neon account you can link it instead; either works.
@@ -130,7 +181,7 @@ Environment variables only reach **new** deployments, so you'll redeploy in step
 The database needs its tables and the single Household before anyone can sign in. Run these once, from the repository:
 
 ```sh
-vercel link                                          # choose your account and the existing "eat" project
+vercel link                                          # only if not already linked in step 2
 vercel env run -e production -- npm run db:migrate   # create the tables in Neon
 vercel env run -e production -- npm run db:seed      # create the Household
 ```
@@ -156,7 +207,9 @@ The seed does nothing if the Household already exists, so running it twice is ha
 
 ## 6. Deploy
 
-1. Open **Deployments**, then on the failed deployment choose **⋯ → Redeploy**. Pushing any commit to `main` also works.
+1. Trigger a production deployment, either way:
+   - **If you created the project from the dashboard (2b):** open **Deployments**, then on the failed deployment choose **⋯ → Redeploy**.
+   - **Any time, including 2a:** push a commit to `main`. With nothing to change, an empty commit works: `git commit --allow-empty -m "Deploy" && git push`.
 2. In the build log, check for `Migrations applied.` before the Next.js build output.
 3. When the deployment is **Ready**, open the production URL.
 
