@@ -20,12 +20,15 @@ You need:
 
 - A Vercel account connected to GitHub, with access to `ymainier/eat`.
 - Node.js 24 and this repository checked out locally (for the one-off seed step).
-- The Vercel CLI:
+- A **recent** Vercel CLI. This guide uses commands added in 2026, such as `vercel integration add` with flags and `vercel env run`. Install or upgrade with the package manager you installed it with, then log in:
 
   ```sh
-  npm i -g vercel
+  npm i -g vercel@latest        # or: pnpm add -g vercel@latest
+  vercel --version              # check it reports the latest version (npm view vercel version)
   vercel login
   ```
+
+  Check which install you're running with `which -a vercel`. An old global install from another package manager can shadow the new one.
 
 Write down the emails that should be able to sign in (yours, your partner's, …). Only these can sign in.
 
@@ -238,6 +241,7 @@ Once all of that works, issue #12 is done.
 
 | Symptom | Likely cause and fix |
 | --- | --- |
+| `vercel integration add …` fails with `Cannot install more than one integration at a time`, or `vercel env run` is unknown | The Vercel CLI is too old: it reads the flag values as extra integration names. Upgrade it (step 0) and run the command again. |
 | Build fails with `DATABASE_URL is not set` | Neon isn't connected to the **Production** environment (step 3.4). |
 | Build or pages fail with `RESEND_API_KEY is required in production` | Add `RESEND_API_KEY` for Production (step 4) and redeploy. |
 | "Application error" after asking for a link; the Vercel function logs show `Resend refused the email (403)` | Path A can only send to the Resend account's own email. For path B: the domain isn't **Verified** yet, or `EMAIL_FROM` uses a different domain than the verified one, or the API key is restricted to another domain. |
