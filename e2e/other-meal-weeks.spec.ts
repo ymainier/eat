@@ -10,7 +10,7 @@ test("plan the next Meal Week while the current one is running", async ({
   const weeks = page.getByRole("navigation", { name: "Meal Weeks" });
   const count = page.getByLabel("Meals planned against the Meal Count");
 
-  await weeks.getByRole("link", { name: "Next →" }).click();
+  await weeks.getByRole("link", { name: "Next Meal Week" }).click();
   await expect(heading).toHaveText("Sat 10 Oct – Fri 16 Oct");
   await expect(page.getByText("Future Meal Week")).toBeVisible();
   await expect(page.getByText("No Meals planned yet.")).toBeVisible();
@@ -19,11 +19,11 @@ test("plan the next Meal Week while the current one is running", async ({
   await page.getByRole("button", { name: "Add Meal" }).click();
   await expect(count).toHaveText("1 / 14");
 
-  await weeks.getByRole("link", { name: "Current Meal Week" }).click();
+  await page.getByRole("link", { name: "This week" }).click();
   await expect(heading).toHaveText("Sat 3 Oct – Fri 9 Oct");
   await expect(count).toHaveText("0 / 14");
 
-  await weeks.getByRole("link", { name: "← Previous" }).click();
+  await weeks.getByRole("link", { name: "Previous Meal Week" }).click();
   await expect(heading).toHaveText("Sat 26 Sept – Fri 2 Oct");
   await expect(page.getByText("Past Meal Week")).toBeVisible();
 

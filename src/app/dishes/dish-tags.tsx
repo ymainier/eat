@@ -1,3 +1,4 @@
+import { CloseIcon } from "../icons";
 import { addDishTag, removeDishTag } from "./actions";
 
 /** A Dish's Tags, each removable, and a field to add one (suggesting existing Tags). */
@@ -5,13 +6,16 @@ export function DishTags({
   dishId,
   dishName,
   tags,
+  tagNames,
 }: {
   dishId: string;
   dishName: string;
   tags: string[];
+  /** Existing Tags, suggested while typing. */
+  tagNames: string[];
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-1 px-2">
+    <div className="flex flex-wrap items-center gap-1.5">
       {tags.map((tag) => (
         <form key={tag} action={removeDishTag}>
           <input type="hidden" name="dishId" value={dishId} />
@@ -19,27 +23,33 @@ export function DishTags({
           <button
             type="submit"
             aria-label={`Remove Tag ${tag} from ${dishName}`}
-            className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-700"
+            className="chip h-11 cursor-pointer gap-1.5 pr-2.5 pl-3.5 text-sm"
           >
-            {tag} ×
+            {tag}
+            <CloseIcon size={14} />
           </button>
         </form>
       ))}
-      <form action={addDishTag} className="flex items-center gap-1">
+      <form action={addDishTag}>
         <input type="hidden" name="dishId" value={dishId} />
         <input
           name="tag"
           list="tag-names"
           required
           autoComplete="off"
-          placeholder="Add a Tag"
+          placeholder="+ Tag"
           aria-label={`Add a Tag to ${dishName}`}
-          className="w-24 rounded border border-zinc-200 px-2 py-0.5 text-xs"
+          className="h-11 w-28 rounded-full border-[1.5px] border-dashed border-rule-strong bg-transparent px-3.5 text-sm placeholder:font-bold placeholder:text-ink-soft"
         />
         <button type="submit" className="sr-only">
           Add Tag to {dishName}
         </button>
       </form>
+      <datalist id="tag-names">
+        {tagNames.map((name) => (
+          <option key={name} value={name} />
+        ))}
+      </datalist>
     </div>
   );
 }

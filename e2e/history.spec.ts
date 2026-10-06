@@ -19,7 +19,8 @@ test("browse history and see a past Meal Week's eaten and not-eaten Meals", asyn
   await page.getByRole("link", { name: "History" }).click();
   const history = page.getByRole("list", { name: "Past Meal Weeks" });
   await expect(history.getByRole("listitem")).toHaveCount(1);
-  await expect(history).toContainText("1 eaten · 2 / 14 planned");
+  await expect(history).toContainText("2 / 14");
+  await expect(history).toContainText("1 eaten · 1 not eaten");
 
   await history.getByRole("link", { name: /Sat 26 Sept – Fri 2 Oct/ }).click();
   await expect(page.getByText("Past Meal Week")).toBeVisible();

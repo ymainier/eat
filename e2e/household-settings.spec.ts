@@ -9,7 +9,8 @@ test("change the start day: existing Meal Weeks are unchanged", async ({ page, s
   await expect(heading).toHaveText("Sat 3 Oct – Fri 9 Oct");
 
   await page.getByRole("link", { name: "Settings" }).click();
-  await page.getByLabel("Meal Week start day").selectOption("Monday");
+  await page.getByText("Mon", { exact: true }).click();
+  await expect(page.getByRole("radio", { name: "Monday" })).toBeChecked();
   await page.getByRole("button", { name: "Save settings" }).click();
   await expect(page.getByRole("status")).toHaveText("Settings saved.");
   await expect(page.getByText("from Mon 12 Oct")).toBeVisible();
@@ -20,10 +21,10 @@ test("change the start day: existing Meal Weeks are unchanged", async ({ page, s
   await expect(page.getByRole("list", { name: "Meals" })).toContainText("Pizza");
 
   const weeks = page.getByRole("navigation", { name: "Meal Weeks" });
-  await weeks.getByRole("link", { name: "Next →" }).click();
+  await weeks.getByRole("link", { name: "Next Meal Week" }).click();
   await expect(heading).toHaveText("Mon 12 Oct – Sun 18 Oct");
-  await weeks.getByRole("link", { name: "← Previous" }).click();
+  await weeks.getByRole("link", { name: "Previous Meal Week" }).click();
   await expect(heading).toHaveText("Sat 3 Oct – Sun 11 Oct");
-  await weeks.getByRole("link", { name: "← Previous" }).click();
+  await weeks.getByRole("link", { name: "Previous Meal Week" }).click();
   await expect(heading).toHaveText("Sat 26 Sept – Fri 2 Oct");
 });

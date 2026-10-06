@@ -35,6 +35,7 @@ test("an allow-listed person signs in with a magic link, then signs out", async 
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Sat 3 Oct – Fri 9 Oct" })).toBeVisible();
 
+  await page.goto("/settings");
   await page.getByRole("button", { name: "Sign out" }).click();
   await expect(page).toHaveURL("/sign-in");
   await page.goto("/");
@@ -66,6 +67,7 @@ test("a sign-in link that was already used is refused with a clear message", asy
 
   await page.goto(link);
   await expect(page).toHaveURL("/");
+  await page.goto("/settings");
   await page.getByRole("button", { name: "Sign out" }).click();
   await expect(page).toHaveURL("/sign-in");
 
