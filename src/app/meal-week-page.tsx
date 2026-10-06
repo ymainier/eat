@@ -13,7 +13,7 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   CloseIcon,
-  HouseIcon,
+  GearIcon,
 } from "./icons";
 import { removeMeal, setMealEaten } from "./meal-week-actions";
 import { PlanMealForm } from "./plan-meal-form";
@@ -51,7 +51,7 @@ export function MealWeekPage({
         <div className="flex items-center justify-between pl-3">
           <p className="text-sm font-bold text-ink-soft">{relationLabel[mealWeek.relation]}</p>
           <Link href="/settings" aria-label="Household settings" className="icon-btn">
-            <HouseIcon />
+            <GearIcon />
           </Link>
         </div>
         <div className="relative">
