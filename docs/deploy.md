@@ -20,7 +20,7 @@ You need:
 
 - A Vercel account connected to GitHub, with access to `ymainier/eat`.
 - Node.js 24 and this repository checked out locally (for the one-off seed step).
-- A **recent** Vercel CLI. This guide uses commands added in 2026, such as `vercel integration add` with flags and `vercel env run`. Install or upgrade with the package manager you installed it with, then log in:
+- A **recent** Vercel CLI. This guide uses commands added in 2026, such as `vercel integration add` with flags and `vercel logs` filters. A CLI from 2025 (e.g. 50.x) fails with confusing errors. Install or upgrade with the package manager you installed it with, then log in:
 
   ```sh
   npm i -g vercel@latest        # or: pnpm add -g vercel@latest
@@ -77,8 +77,10 @@ Send from a subdomain such as `mail.example.com` rather than `example.com` itsel
 
 ### 1.4 Decide the sender (`EMAIL_FROM`)
 
-- Path A: `Eat <onboarding@resend.dev>`
+- Path A: `Eat <onboarding@resend.dev>`. Expect the first emails to land in **spam**: this is a shared test sender. Mark one as "not spam".
 - Path B: `Eat <eat@mail.example.com>`. Any local part works, but the domain must be the one you verified.
+
+**Don't** use an address on your app's domain, such as `eat@eat-ymainier.vercel.app`. Resend can't verify a `vercel.app` domain because you don't control its DNS. Every send then fails with `The eat-ymainier.vercel.app domain is not verified` (403).
 
 ## 2. Create the Vercel project
 
@@ -120,9 +122,15 @@ The CLI reads the `origin` remote (`github.com/ymainier/eat`) and asks for confi
 
 ### Your production URL
 
-Production deployments are served at `https://<project-name>.vercel.app`. If that name is taken, the domain gets a suffix, e.g. `eat-ymainier.vercel.app`. Find the exact domain under **Settings → Domains** in the project (`vercel project inspect` also shows it).
+Vercel gives the project a generated production domain, such as `eat-nine-xi.vercel.app` when `eat.vercel.app` is taken. List it with:
 
-You need it for `BETTER_AUTH_URL` in step 4. With 2a the domain may only appear after the first production deployment. If so, add `BETTER_AUTH_URL` after step 6 and redeploy once more. Sign-in won't work until it's set, but everything else deploys fine.
+```sh
+vercel api /v9/projects/eat/domains
+```
+
+You can swap it for a nicer free name such as `eat-ymainier.vercel.app`, but only **after the first successful production deployment**. Before that, `vercel domains add` fails with `Your project's latest production deployment has errored. Therefore, the domain cannot be assigned. (400)`. Step 6 covers swapping it.
+
+Decide now which name you'll use: it goes in `BETTER_AUTH_URL` in step 4. Sign-in links point at that address, and sign-in only works there.
 
 ## 3. Add the database (Neon via the Vercel Marketplace)
 
@@ -131,15 +139,26 @@ You need it for `BETTER_AUTH_URL` in step 4. With 2a the domain may only appear 
 With the project linked (step 2):
 
 ```sh
-vercel integration add neon --help    # shows the plans and metadata keys, e.g. the region key and its values
-vercel integration add neon --name eat --environment production --no-env-pull
+vercel integration add neon --name eat -m region=lhr1 -m auth=false --plan free_v3 -e production --no-env-pull
 ```
 
-- The command prompts for anything you don't pass as flags. Choose the **free** plan and the **London** region, as described in the settings below. To skip the prompts, pass the plan with `--plan` and the region with `--metadata <key>=<value>`, using the exact names that `--help` printed.
-- `--environment production` connects the database to Production only.
+- `-m region=lhr1` creates the database in London, next to the app's functions. **The region can't be changed afterwards**, so set it here. The interactive prompts don't always offer it.
+- `-m auth=false` turns off Neon's built-in authentication, which is on by default. Eat has its own sign-in (Better Auth).
+- `--plan free_v3` is the free plan.
+- `-e production` connects the database to Production only.
 - `--no-env-pull` stops the CLI writing the production database URL into a local `.env.local`, which would override your local Docker database.
 
-If Neon isn't installed on your Vercel account yet, the command installs it first and may ask you to accept Neon's terms.
+`vercel integration add neon --help` lists the current plans, regions and options if these names change. If Neon isn't installed on your Vercel account yet, the command installs it first and may ask you to accept Neon's terms.
+
+The command also downloads Neon's agent skills into the repository: `.agents/skills/neon*` and `skills-lock.json`. They are instructions for AI coding agents; the app doesn't use them. Delete them (`rm -rf .agents skills-lock.json`) or commit them if you want agents to have Neon's guidance.
+
+**Created it in the wrong region?** It's still empty, so delete it and run the command above again:
+
+```sh
+vercel integration resource remove eat --disconnect-all
+```
+
+Check the result with `vercel integration list`: `eat` should be connected to the `eat` project.
 
 ### From the dashboard
 
@@ -157,6 +176,8 @@ If Neon isn't installed on your Vercel account yet, the command installs it firs
 
 Neon's free plan suspends the database after a few minutes without traffic. The first page load after a quiet period is therefore a little slower while it wakes up. That's expected.
 
+**The app's own region:** the project's default function region stays Washington (`iad1`), but `vercel.json` sets `"regions": ["lhr1"]`, which overrides it on every deployment. You don't need to change any project setting. `vercel project inspect eat` shows `Region iad1` under **Sandbox**, which is a different Vercel product. To confirm where the functions run, use `vercel inspect <deployment-url>` after a successful deployment.
+
 ## 4. Set the environment variables
 
 In **Settings → Environment Variables**, add these with the **Production** environment only. Mark the secrets as **Sensitive**.
@@ -171,15 +192,31 @@ In **Settings → Environment Variables**, add these with the **Production** env
 
 `DATABASE_URL` is already there from step 3. **Don't** set `EAT_CLOCK_NOW` (it's for tests and is ignored in production anyway).
 
-You can also add them from the terminal after linking the project (step 5). The CLI prompts for each value, so secrets stay out of your shell history:
+From the terminal (with the project linked in step 2), piping values in:
 
 ```sh
-vercel env add BETTER_AUTH_SECRET production
+# Generated and piped straight in: never shown or saved in your shell history.
+openssl rand -base64 32 | tr -d '\n' | vercel env add BETTER_AUTH_SECRET production --sensitive
+# Prompts for the value: paste the re_… key.
+vercel env add RESEND_API_KEY production --sensitive
+printf 'https://eat-ymainier.vercel.app' | vercel env add BETTER_AUTH_URL production
+printf 'you@example.com,partner@example.com' | vercel env add ALLOWED_EMAILS production
+printf 'Eat <onboarding@resend.dev>' | vercel env add EMAIL_FROM production
+vercel env ls production    # names and when each was last changed; values stay hidden
+```
+
+The CLI stores Production variables as Sensitive (hidden) by default.
+
+**To change a value, remove the variable and add it again.** `vercel env update` with a piped value can silently leave a Sensitive variable unchanged. Afterwards, check that `vercel env ls production` shows it changed "a few seconds ago":
+
+```sh
+vercel env rm EMAIL_FROM production --yes
+printf 'Eat <eat@mail.example.com>' | vercel env add EMAIL_FROM production
 ```
 
 Environment variables only reach **new** deployments, so you'll redeploy in step 6.
 
-## 5. Link your checkout and create the Household
+## 5. Create the tables and the Household
 
 The database needs its tables and the single Household before anyone can sign in. Run these once, from the repository:
 
@@ -209,7 +246,15 @@ The seed does nothing if the Household already exists, so running it twice is ha
    - **If you created the project from the dashboard (2b):** open **Deployments**, then on the failed deployment choose **⋯ → Redeploy**.
    - **Any time, including 2a:** push a commit to `main`. With nothing to change, an empty commit works: `git commit --allow-empty -m "Deploy" && git push`.
 2. In the build log, check for `Migrations applied.` before the Next.js build output.
-3. When the deployment is **Ready**, open the production URL.
+3. Once the deployment is **Ready**, attach the name you chose in step 2. Then remove the generated domain, so nobody reaches the app at an address where sign-in can't work:
+
+   ```sh
+   vercel domains add eat-ymainier.vercel.app eat
+   vercel api /v9/projects/eat/domains/eat-nine-xi.vercel.app -X DELETE   # your generated domain
+   ```
+
+   `.vercel.app` names are first come, first served. If yours is taken, pick another, update `BETTER_AUTH_URL` (step 4) and redeploy. You can also do this in **Settings → Domains**, where the old domain can redirect to the new one instead.
+4. Open the production URL.
 
 From now on, every push to `main` deploys to production and applies any new migrations first. Preview deployments (other branches) skip migrations. They have no database or secrets, so their pages don't work; that's expected. Use local development to try changes.
 
@@ -222,6 +267,16 @@ From now on, every push to `main` deploys to production and applies any new migr
 5. On a second device or browser, sign in as another Member (path B only) and check you both see the same Meal Week.
 
 Once all of that works, issue #12 is done.
+
+### When the app shows "This page couldn't load"
+
+Errors on the server show only that generic page. The cause is in the logs:
+
+```sh
+vercel logs --environment production --since 30m --level error -x
+```
+
+Look up the error message in the troubleshooting table below.
 
 ## Changing things later
 
@@ -236,14 +291,18 @@ Once all of that works, issue #12 is done.
 
 | Symptom | Likely cause and fix |
 | --- | --- |
-| `vercel integration add …` fails with `Cannot install more than one integration at a time`, or `vercel env run` is unknown | The Vercel CLI is too old: it reads the flag values as extra integration names. Upgrade it (step 0) and run the command again. |
-| Build fails with `DATABASE_URL is not set` | Neon isn't connected to the **Production** environment (step 3.4). |
+| `vercel integration add …` fails with `Cannot install more than one integration at a time` | The Vercel CLI is too old: it reads the flag values as extra integration names. Upgrade it (step 0) and run the command again. |
+| The Neon database is in the wrong region, and the dashboard won't change it | A database's region is fixed when it's created. Remove it and create it again with `-m region=lhr1` (step 3). |
+| `vercel domains add` fails with `latest production deployment has errored … (400)` | Vercel only attaches domains once there's a successful production deployment. Finish steps 3–6 first. |
+| Logs show `Resend refused the email (403)` with `The <name>.vercel.app domain is not verified` | `EMAIL_FROM` uses a `vercel.app` address, which Resend can't verify. Use `onboarding@resend.dev` (path A) or your verified domain (path B), then redeploy (step 4). |
+| You changed a variable and redeployed, but the app still uses the old value | The change didn't stick: `vercel env update` can leave a Sensitive variable unchanged. Remove and re-add it, check `vercel env ls production`, and redeploy (step 4). |
+| Build fails with `DATABASE_URL is not set` | Neon isn't connected to the **Production** environment (step 3); check with `vercel integration list`. |
 | Build or pages fail with `RESEND_API_KEY is required in production` | Add `RESEND_API_KEY` for Production (step 4) and redeploy. |
-| "Application error" after asking for a link; the Vercel function logs show `Resend refused the email (403)` | Path A can only send to the Resend account's own email. For path B: the domain isn't **Verified** yet, or `EMAIL_FROM` uses a different domain than the verified one, or the API key is restricted to another domain. |
-| The email never arrives, but Resend shows it as delivered | Check spam. Add the DMARC record (step 1.2.5) and send from a subdomain. |
+| "This page couldn't load" after asking for a link, and the logs show `Resend refused the email (403)` | `You can only send testing emails to your own email address`: path A only delivers to the Resend account's own email. For path B: the domain isn't **Verified** yet, or `EMAIL_FROM` uses a different domain than the verified one, or the API key is restricted to another domain. |
+| The email lands in spam, or never arrives though Resend shows it as delivered | Check spam. It's expected with `onboarding@resend.dev`. For good delivery, send from your own verified subdomain with a DMARC record (step 1.2). |
 | The link opens the sign-in page with "That sign-in link didn't work" | The link expired (5 minutes) or was already used. Ask for a new one. |
 | Sign-in fails when using a long `…-git-…vercel.app` or deployment URL | Always use the production domain in `BETTER_AUTH_URL`. Sign-in only accepts requests from that origin. |
-| Error `No Household exists yet; run the seed` | Run the seed against the production database (step 5). If it printed your local Household's ID, it ran against Docker: set `DATABASE_URL` explicitly. |
+| The sign-in link works, then "This page couldn't load", and the logs show `No Household exists yet; run the seed` | Run the seed against the production database (step 5), then reload; there's no need to sign in again. If the seed printed your local Household's ID, it ran against Docker: set `DATABASE_URL` explicitly. |
 | First page after a while is slow | Neon waking from scale-to-zero; normal on the free plan. |
 
 ## Free-tier limits worth knowing
