@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import {
   DishNameRequiredError,
   MealNotFoundError,
@@ -9,26 +10,48 @@ import {
 import { application } from "@/web/application";
 import { requireMember } from "@/web/session";
 
-export type PlanMealState = { error?: string };
+export type PlanMealState = {
+  error?: string;
+  /** What the Member typed, kept when the Meal is refused. */
+  dishName?: string;
+  /** Changes on every submission, to refresh the field. */
+  at?: number;
+};
 
 export async function planMeal(
   _previous: PlanMealState,
   formData: FormData,
 ): Promise<PlanMealState> {
   const member = await requireMember();
+  const dishName = String(formData.get("dishName") ?? "");
   try {
     await application().planMeal({
       member,
-      dishName: String(formData.get("dishName") ?? ""),
+      dishName,
       mealWeekStartDate: String(formData.get("mealWeekStartDate")),
     });
   } catch (error) {
-    if (error instanceof DishNameRequiredError) return { error: "Type a Dish name." };
-    if (error instanceof MealWeekNotFoundError) return { error: "That Meal Week doesn't exist." };
+    const refused = (message: string) => ({ error: message, dishName, at: Date.now() });
+    if (error instanceof DishNameRequiredError) return refused("Type a Dish name.");
+    if (error instanceof MealWeekNotFoundError) return refused("That Meal Week doesn't exist.");
     throw error;
   }
   revalidatePath("/", "layout");
-  return {};
+  return { at: Date.now() };
+}
+
+/** Plans a Meal of a Dish from its page, then shows the Meal Week it went to. */
+export async function planDish(formData: FormData) {
+  const member = await requireMember();
+  const mealWeekStartDate = String(formData.get("mealWeekStartDate"));
+  await application().planMeal({
+    member,
+    dishName: String(formData.get("dishName")),
+    mealWeekStartDate,
+  });
+  revalidatePath("/", "layout");
+  const current = await application().getCurrentMealWeek({ member });
+  redirect(current.startDate === mealWeekStartDate ? "/" : `/meal-weeks/${mealWeekStartDate}`);
 }
 
 export async function removeMeal(formData: FormData) {

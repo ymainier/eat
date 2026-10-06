@@ -1,26 +1,100 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* Eat: a kitchen notebook. Dark mode swaps the values, not the names. */
+@theme {
+  --color-paper: #f6f2ea;
+  --color-sheet: #fffdf9;
+  --color-rule: #e4dccd;
+  --color-rule-strong: #8f8473;
+  --color-ink: #1f2a35;
+  --color-ink-soft: #56606a;
+  --color-done: #5f676f;
+  --color-pen: #2c5a86;
+  --color-on-pen: #ffffff;
+  --color-pen-wash: #e3ecf5;
+  --color-marker: #b54708;
+  --color-on-marker: #ffffff;
+  --color-marker-wash: #fce9d4;
+  --color-marker-ink: #6b2a05;
+  --color-chip: #ece5d8;
+  --color-chip-ink: #4a4237;
+  --color-danger: #a1260d;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-atkinson), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+  --font-hand: var(--font-caveat), cursive;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --color-paper: #16191d;
+    --color-sheet: #20242a;
+    --color-rule: #343a42;
+    --color-rule-strong: #6e7680;
+    --color-ink: #eee8dc;
+    --color-ink-soft: #aba598;
+    --color-done: #9c978c;
+    --color-pen: #8fb8e3;
+    --color-on-pen: #0e1d2c;
+    --color-pen-wash: #22303f;
+    --color-marker: #f0954f;
+    --color-on-marker: #2a1404;
+    --color-marker-wash: #3b2414;
+    --color-marker-ink: #f8cfa8;
+    --color-chip: #2e333a;
+    --color-chip-ink: #d9d2c5;
+    --color-danger: #f4a08c;
+    color-scheme: dark;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@utility ruled {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0 31px,
+    var(--color-rule) 31px 32px
+  );
+}
+
+@layer base {
+  body {
+    background: var(--color-paper);
+    color: var(--color-ink);
+  }
+  :focus-visible {
+    outline: 3px solid var(--color-pen);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .field {
+    @apply min-h-13 w-full min-w-0 rounded-[14px] border-[1.5px] border-rule-strong bg-sheet px-3.5 text-[17px] placeholder:text-ink-soft;
+  }
+  .btn {
+    @apply inline-flex min-h-13 cursor-pointer items-center justify-center gap-2 rounded-[14px] px-5 text-[17px] font-bold disabled:opacity-60;
+  }
+  .btn-pen {
+    @apply bg-pen text-on-pen;
+  }
+  .btn-ghost {
+    @apply border-[1.5px] border-rule-strong text-ink;
+  }
+  .icon-btn {
+    @apply grid size-12 shrink-0 cursor-pointer place-items-center rounded-xl text-ink;
+  }
+  .chip {
+    @apply inline-flex h-6 items-center rounded-full bg-chip px-2.5 text-[13px] font-medium whitespace-nowrap text-chip-ink;
+  }
+  .chip-filter {
+    @apply inline-flex min-h-11 items-center rounded-full border-[1.5px] border-rule-strong bg-sheet px-4 text-[15px] font-medium whitespace-nowrap text-ink aria-[current=page]:border-pen aria-[current=page]:bg-pen aria-[current=page]:text-on-pen;
+  }
+  .card {
+    @apply rounded-[18px] border border-rule bg-sheet;
+  }
+  .label {
+    @apply text-sm font-bold text-ink-soft;
+  }
 }

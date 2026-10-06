@@ -17,42 +17,42 @@ export function RecipeForm({ dishId, recipe }: { dishId: string; recipe: Recipe 
   return (
     <form key={state.at} action={action} className="flex flex-col gap-3">
       <input type="hidden" name="dishId" value={dishId} />
-      <label className="flex flex-col gap-1">
+      <label className="label flex flex-col gap-1.5">
         Ingredients
         <textarea
           name="ingredients"
           rows={6}
           defaultValue={values.ingredients}
-          className="rounded border border-zinc-300 px-3 py-2"
+          className="field py-3 font-normal text-ink"
         />
       </label>
-      <label className="flex flex-col gap-1">
+      <label className="label flex flex-col gap-1.5">
         Steps
         <textarea
           name="steps"
           rows={8}
           defaultValue={values.steps}
-          className="rounded border border-zinc-300 px-3 py-2"
+          className="field py-3 font-normal text-ink"
         />
       </label>
-      <label className="flex flex-col gap-1">
+      <label className="label flex flex-col gap-1.5">
         Source URL (optional)
         <input
           name="sourceUrl"
           inputMode="url"
           defaultValue={values.sourceUrl}
-          className="rounded border border-zinc-300 px-3 py-2"
+          className="field py-3 font-normal text-ink"
         />
       </label>
       {state.error && (
-        <p role="alert" className="text-red-700">
+        <p role="alert" className="font-medium text-danger">
           {state.error}
         </p>
       )}
       <button
         type="submit"
         disabled={pending}
-        className="self-start rounded bg-zinc-900 px-4 py-2 text-white disabled:opacity-50"
+        className="btn btn-pen self-start"
       >
         Save Recipe
       </button>

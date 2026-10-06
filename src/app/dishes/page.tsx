@@ -2,9 +2,9 @@ import Link from "next/link";
 import { application } from "@/web/application";
 import { formatDay } from "@/web/format";
 import { requireMember } from "@/web/session";
-import { setDishArchived } from "./actions";
-import { CreateDishForm, RenameDishForm } from "./dish-forms";
-import { DishTags } from "./dish-tags";
+import { AppShell } from "../app-shell";
+import { BookIcon, ChevronRightIcon, SearchIcon } from "../icons";
+import { CreateDishForm } from "./dish-forms";
 
 export default async function DishCataloguePage({ searchParams }: PageProps<"/dishes">) {
   const params = await searchParams;
@@ -26,54 +26,46 @@ export default async function DishCataloguePage({ searchParams }: PageProps<"/di
   };
 
   return (
-    <main className="mx-auto w-full max-w-xl p-4">
-      <nav className="mb-6 text-sm">
-        <Link href="/" className="underline">
-          ← Current Meal Week
-        </Link>
-      </nav>
-      <h1 className="mb-4 text-xl font-semibold">{archived ? "Archived Dishes" : "Dishes"}</h1>
+    <AppShell current="dishes">
+      <header className="px-5 pt-4.5 pb-2">
+        <h1 className="font-display text-[30px] leading-tight font-bold">
+          {archived ? "Archived Dishes" : "Dishes"}
+        </h1>
+      </header>
 
-      {!archived && (
-        <div className="mb-4">
-          <CreateDishForm />
-        </div>
-      )}
+      <div className="flex flex-col gap-3 px-4">
+        {!archived && <CreateDishForm />}
 
-      <form role="search" className="mb-2 flex gap-2">
-        {archived && <input type="hidden" name="archived" value="1" />}
-        {tag && <input type="hidden" name="tag" value={tag} />}
-        <label className="sr-only" htmlFor="search">
-          Search Dishes
-        </label>
-        <input
-          id="search"
-          name="search"
-          type="search"
-          defaultValue={search}
-          placeholder="Search by name"
-          className="min-w-0 flex-1 rounded border border-zinc-300 px-3 py-2"
-        />
-        <button type="submit" className="rounded border border-zinc-300 px-3 py-2">
-          Search
-        </button>
-      </form>
-      <p className="mb-4 flex gap-4 text-sm">
-        <Link href={archived ? "/dishes" : "/dishes?archived=1"} className="underline">
-          {archived ? "Show active Dishes" : "Show Archived Dishes"}
-        </Link>
-        <Link href="/tags" className="underline">
-          Manage Tags
-        </Link>
-      </p>
+        <form role="search" className="relative">
+          {archived && <input type="hidden" name="archived" value="1" />}
+          {tag && <input type="hidden" name="tag" value={tag} />}
+          <label className="sr-only" htmlFor="search">
+            Search Dishes
+          </label>
+          <input
+            id="search"
+            name="search"
+            type="search"
+            defaultValue={search}
+            placeholder="Search Dishes"
+            className="field pr-13"
+          />
+          <button
+            type="submit"
+            aria-label="Search"
+            className="icon-btn absolute top-0.5 right-0.5 text-ink-soft"
+          >
+            <SearchIcon size={22} />
+          </button>
+        </form>
+      </div>
 
       {(tags.length > 0 || tag) && (
-        <nav aria-label="Filter by Tag" className="mb-4 flex flex-wrap gap-2 text-sm">
-          <Link
-            href={filterHref()}
-            aria-current={tag ? undefined : "page"}
-            className="rounded-full border px-3 py-1 aria-[current=page]:bg-zinc-900 aria-[current=page]:text-white"
-          >
+        <nav
+          aria-label="Filter by Tag"
+          className="flex gap-2 overflow-x-auto px-4 pt-3 pb-1 [scrollbar-width:none]"
+        >
+          <Link href={filterHref()} aria-current={tag ? undefined : "page"} className="chip-filter">
             All
           </Link>
           {tags.map((t) => (
@@ -81,56 +73,63 @@ export default async function DishCataloguePage({ searchParams }: PageProps<"/di
               key={t.name}
               href={filterHref(t.name)}
               aria-current={tag?.toLowerCase() === t.name.toLowerCase() ? "page" : undefined}
-              className="rounded-full border px-3 py-1 aria-[current=page]:bg-zinc-900 aria-[current=page]:text-white"
+              className="chip-filter"
             >
               {t.name}
             </Link>
           ))}
         </nav>
       )}
-      <datalist id="tag-names">
-        {tags.map((t) => (
-          <option key={t.name} value={t.name} />
-        ))}
-      </datalist>
 
-      {dishes.length === 0 ? (
-        <p className="text-zinc-500">No Dishes found.</p>
-      ) : (
-        <ul aria-label="Dishes" className="divide-y divide-zinc-200">
-          {dishes.map((dish) => (
-            <li key={dish.id} className="flex items-start gap-3 py-3">
-              <div className="flex-1">
-                <RenameDishForm dishId={dish.id} name={dish.name} />
-                <DishTags dishId={dish.id} dishName={dish.name} tags={dish.tags} />
-                <p className="px-2 text-sm text-zinc-500">
-                  <Link
-                    href={`/dishes/${dish.id}`}
-                    aria-label={`${dish.hasRecipe ? "Recipe" : "Add Recipe"} for ${dish.name}`}
-                    className={`mr-2 underline ${dish.hasRecipe ? "font-medium text-emerald-700" : ""}`}
-                  >
-                    {dish.hasRecipe ? "Recipe" : "Add Recipe"}
-                  </Link>
-                  {dish.lastPlannedIn
-                    ? `Last planned in the Meal Week of ${formatDay(dish.lastPlannedIn)}`
-                    : "Never planned"}
-                </p>
-              </div>
-              <form action={setDishArchived}>
-                <input type="hidden" name="dishId" value={dish.id} />
-                <input type="hidden" name="archived" value={String(!dish.archived)} />
-                <button
-                  type="submit"
-                  aria-label={`${dish.archived ? "Unarchive" : "Archive"} ${dish.name}`}
-                  className="py-1 text-sm text-zinc-600 underline"
+      <div className="flex flex-col gap-2 px-4 pt-3">
+        {dishes.length === 0 ? (
+          <p className="py-8 text-center font-hand text-[28px] font-semibold text-ink-soft">
+            No Dishes found.
+          </p>
+        ) : (
+          <ul aria-label="Dishes" className="card divide-y divide-rule overflow-hidden">
+            {dishes.map((dish) => (
+              <li key={dish.id}>
+                <Link
+                  href={`/dishes/${dish.id}`}
+                  className="flex min-h-16 items-center gap-2.5 py-2 pr-2 pl-4"
                 >
-                  {dish.archived ? "Unarchive" : "Archive"}
-                </button>
-              </form>
-            </li>
-          ))}
-        </ul>
-      )}
-    </main>
+                  <span className="flex min-w-0 flex-1 flex-col gap-1">
+                    <span className="text-lg font-medium">{dish.name}</span>
+                    <span className="flex flex-wrap items-center gap-1.5">
+                      {dish.tags.map((t) => (
+                        <span key={t} className="chip">
+                          {t}
+                        </span>
+                      ))}
+                      {dish.hasRecipe && (
+                        <span className="inline-flex items-center gap-1 text-[13px] font-medium text-ink-soft">
+                          <BookIcon size={15} />
+                          Recipe
+                        </span>
+                      )}
+                    </span>
+                    <span className="text-[13px] text-ink-soft">
+                      {dish.lastPlannedIn
+                        ? `Last planned in the Meal Week of ${formatDay(dish.lastPlannedIn)}`
+                        : "Never planned"}
+                    </span>
+                  </span>
+                  <ChevronRightIcon className="shrink-0 text-ink-soft" size={22} />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+        <p className="flex justify-center gap-6 text-[15px] font-bold text-ink-soft">
+          <Link href={archived ? "/dishes" : "/dishes?archived=1"} className="flex min-h-13 items-center">
+            {archived ? "Show active Dishes" : "Show Archived Dishes"}
+          </Link>
+          <Link href="/tags" className="flex min-h-13 items-center">
+            Manage Tags
+          </Link>
+        </p>
+      </div>
+    </AppShell>
   );
 }

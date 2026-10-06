@@ -47,7 +47,7 @@ test("dismiss Carry Over", async ({ page, signIn }) => {
 
   await page.goto("/");
   const prompt = page.getByRole("region", { name: "Carry Over" });
-  await prompt.getByRole("button", { name: "Dismiss" }).click();
+  await prompt.getByRole("button", { name: "Skip" }).click();
   await expect(prompt).toBeHidden();
   await expect(page.getByText("No Meals planned yet.")).toBeVisible();
 });

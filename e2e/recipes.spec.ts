@@ -9,7 +9,7 @@ test("edit a Recipe and open it from a Meal", async ({ page, signIn }) => {
   await expect(page.getByRole("link", { name: "Recipe for Carbonara" })).toHaveCount(0);
 
   await page.getByRole("link", { name: "Dishes" }).click();
-  await page.getByRole("link", { name: "Add Recipe for Carbonara" }).click();
+  await page.getByRole("list", { name: "Dishes" }).getByRole("link", { name: /^Carbonara/ }).click();
   await expect(page.getByRole("heading", { name: "Carbonara" })).toBeVisible();
 
   await page.getByLabel("Ingredients").fill("200g spaghetti\n2 eggs");

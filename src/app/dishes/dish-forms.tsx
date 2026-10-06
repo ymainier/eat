@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { PlusIcon } from "../icons";
 import { createDish, renameDish, type DishFormState } from "./actions";
 
 export function CreateDishForm() {
@@ -19,18 +20,15 @@ export function CreateDishForm() {
           name="name"
           required
           placeholder="New Dish"
-          className="min-w-0 flex-1 rounded border border-zinc-300 px-3 py-2"
+          className="field flex-1"
         />
-        <button
-          type="submit"
-          disabled={pending}
-          className="rounded bg-zinc-900 px-4 py-2 text-white disabled:opacity-50"
-        >
+        <button type="submit" disabled={pending} className="btn btn-pen px-4">
+          <PlusIcon size={20} />
           Create Dish
         </button>
       </div>
       {state.error && (
-        <p role="alert" className="text-red-700">
+        <p role="alert" className="px-1 font-medium text-danger">
           {state.error}
         </p>
       )}
@@ -41,7 +39,7 @@ export function CreateDishForm() {
 export function RenameDishForm({ dishId, name }: { dishId: string; name: string }) {
   const [state, action, pending] = useActionState<DishFormState, FormData>(renameDish, {});
   return (
-    <form action={action} className="flex flex-col gap-1">
+    <form action={action} className="flex flex-col gap-2">
       <input type="hidden" name="dishId" value={dishId} />
       <div className="flex gap-2">
         <input
@@ -51,19 +49,19 @@ export function RenameDishForm({ dishId, name }: { dishId: string; name: string 
           required
           defaultValue={state.error ? state.name : name}
           aria-label={`Name of ${name}`}
-          className="min-w-0 flex-1 rounded border border-transparent px-2 py-1 font-medium hover:border-zinc-300 focus:border-zinc-300"
+          className="field flex-1"
         />
         <button
           type="submit"
           disabled={pending}
           aria-label={`Rename ${name}`}
-          className="text-sm text-zinc-600 underline disabled:opacity-50"
+          className="btn btn-ghost px-4"
         >
           Rename
         </button>
       </div>
       {state.error && (
-        <p role="alert" className="text-sm text-red-700">
+        <p role="alert" className="px-1 font-medium text-danger">
           {state.error}
         </p>
       )}

@@ -16,14 +16,24 @@ export default async function SignInPage({
     typeof error === "string" ? (errors[error] ?? linkFailed) : undefined;
 
   return (
-    <main className="mx-auto flex w-full max-w-sm flex-col gap-6 p-4 pt-16">
-      <h1 className="text-2xl font-semibold">Sign in to Eat</h1>
-      {message && (
-        <p role="alert" className="text-red-700">
-          {message}
-        </p>
-      )}
-      <SignInForm />
-    </main>
+    <div className="ruled flex flex-1 flex-col">
+      <main className="mx-auto flex w-full max-w-sm flex-1 flex-col px-6 pb-10 sm:justify-center">
+        <div className="flex flex-1 flex-col justify-center gap-1.5 pt-10 pb-8 sm:flex-none">
+          <p className="font-display text-[64px] leading-none font-bold text-pen">Eat</p>
+          <p className="font-hand text-3xl leading-tight font-semibold text-ink-soft">
+            what’s for dinner this week?
+          </p>
+        </div>
+        <section className="card flex flex-col gap-3.5 px-4.5 pt-5.5 pb-4.5">
+          <h1 className="font-display text-[22px] font-bold">Sign in to Eat</h1>
+          {message && (
+            <p role="alert" className="font-medium text-danger">
+              {message}
+            </p>
+          )}
+          <SignInForm />
+        </section>
+      </main>
+    </div>
   );
 }
